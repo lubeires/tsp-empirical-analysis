@@ -62,6 +62,27 @@ def read_tsp(path: str | Path) -> Instance:
     return Instance(name=header.get("NAME", Path(path).stem), coords=np.array(coords))
 
 
+def write_tsp(instance: Instance, path: str | Path, comment: str = "") -> None:
+    """Grava uma instância EUC_2D no formato TSPLIB (ids a partir de 1).
+
+    As coordenadas são escritas com repr(float(...)), que garante leitura de volta
+    exatamente igual. O float(...) é necessário porque repr de um np.float64
+    no NumPy 2 produz 'np.float64(...)'.
+    """
+    lines = [
+        f"NAME : {instance.name}",
+        f"COMMENT : {comment}",
+        "TYPE : TSP",
+        f"DIMENSION : {instance.n}",
+        "EDGE_WEIGHT_TYPE : EUC_2D",
+        "NODE_COORD_SECTION",
+    ]
+    for i, (x, y) in enumerate(instance.coords, start=1):
+        lines.append(f"{i} {float(x)!r} {float(y)!r}")
+    lines.append("EOF")
+    Path(path).write_text("\n".join(lines) + "\n")
+
+
 def read_tour(path: str | Path) -> list[int]:
     """Lê uma rota (.tour) e devolve os vértices com índices a partir de 0."""
     lines = Path(path).read_text().splitlines()
