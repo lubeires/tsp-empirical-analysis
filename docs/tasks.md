@@ -9,7 +9,7 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 ## Fase 1: Base (20/11)
 - [x] **T03** `tsplib.py` + `distance.py` (leitura e matriz com `nint`). *Pronto quando:* a rota ótima oficial do berlin52 custa 7542.
 - [x] **T04** `generate.py`: 12 sub-instâncias + `manifest.csv` (RF1). *Pronto quando:* gerar duas vezes produz arquivos idênticos.
-- [ ] **T05** `instrument.py`: `timed` e modo de memória (RF5). *Pronto quando:* teste com uma função falsa passa.
+- [x] **T05** `instrument.py`: `timed` e modo de memória (RF5). *Pronto quando:* teste com uma função falsa passa.
 
 ## Fase 2: Algoritmos (21/11)
 - [ ] **T06** Auxiliares de teste (validar rota, força bruta) + rota trivial + vizinho mais próximo. *Pronto quando:* testes do P3 passam.
