@@ -34,7 +34,7 @@ prompts/            transcrições exportadas
 | Twice-around-the-tree | MST + pré-ordem a partir do vértice 0 | O(n²) |
 | Christofides (D8) | MST → vértices de grau ímpar → `networkx.min_weight_matching` → circuito euleriano (Hierholzer, próprio) → atalhos | ~O(n³), dominado pelo emparelhamento |
 
-### Branch-and-Bound (D9, D10)
+### Branch-and-Bound (D9 → D20, D10, D21)
 - **Exploração em profundidade (DFS) recursiva:** memória O(n), importante com 3 GB de RAM.
 - **Limite inferior de cada nó:**
   ```
@@ -43,7 +43,7 @@ prompts/            transcrições exportadas
   + menor aresta do último vértice do caminho até esse conjunto
   + menor aresta do vértice inicial até esse conjunto
   ```
-  (limite 1-tree adaptado para caminhos parciais)
+  (limite 1-tree adaptado para caminhos parciais; **substituído na T12 pelo Held-Karp**, que é esta mesma fórmula com penalidades π por vértice ajustadas por subgradiente — D20, D21)
 - **Ordem dos filhos:** do mais próximo para o mais distante.
 - **Poda:** quando o limite inferior é ≥ ao limite superior.
 - **Prazo interno:** o relógio é conferido a cada nó; ao chegar a 30 min o B&B para e devolve os contadores parciais. O executor tem um limite de segurança de 31 min, que encerra o processo se ele travar.

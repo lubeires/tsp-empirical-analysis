@@ -11,10 +11,11 @@ import numpy as np
 _INF = np.iinfo(np.int64).max
 
 
-def prim(dist: np.ndarray, vertices=None) -> tuple[list[tuple[int, int]], int]:
+def prim(dist: np.ndarray, vertices=None) -> tuple[list[tuple[int, int]], int | float]:
     """MST dos `vertices` (todos, se None).
 
     Devolve (arestas, custo). Cada aresta é (pai, filho) com índices originais.
+    Aceita pesos inteiros (custo int) ou reais (custo float, usado no Held-Karp).
     Empates decididos pelo menor índice (argmin): resultado determinístico.
     """
     if vertices is None:
@@ -37,7 +38,8 @@ def prim(dist: np.ndarray, vertices=None) -> tuple[list[tuple[int, int]], int]:
         # Vértice fora da árvore mais próximo dela
         u = int(np.argmin(np.where(in_tree, _INF, best)))
         in_tree[u] = True
-        total += int(best[u])
+        # .item(): int para matriz inteira, float para pesos reais (Held-Karp, T12)
+        total += best[u].item()
         edges.append((int(vertices[parent[u]]), int(vertices[u])))
 
         # Atualiza best/parent com a linha de u (só vértices fora da árvore que melhoram)
