@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tsp-tp2"
+version = "0.1.0"
+description = "TP2 de Algoritmos 2: análise empírica de algoritmos para o TSP EUC_2D"
+requires-python = ">=3.12"
+
+# Pacotes ficam em src/ (tsp, experiments, analysis)
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

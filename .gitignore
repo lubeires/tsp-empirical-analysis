@@ -1,0 +1,8 @@
+# Ambiente virtual e caches do Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# results/ e data/ NÃO são ignorados: fazem parte da entrega
