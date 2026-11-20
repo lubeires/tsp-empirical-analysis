@@ -18,7 +18,7 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 - [x] **T09** Twice-around-the-tree. *Pronto quando:* rota válida e custo ≤ 2 × ótimo.
 - [x] **T10** Christofides (emparelhamento, Hierholzer, atalhos). *Pronto quando:* rota válida e custo ≤ 1,5 × ótimo.
 - [x] **T11** `bnb.py` (limite inferior, DFS, contadores, prazo). *Pronto quando:* ótimo = força bruta para N ≤ 9 e o prazo interno funciona.
-- [ ] **T12** Ponto de decisão: auditoria com `cProfile` e medição do B&B com N = 20, 30 e 40. *Pronto quando:* decidido se N = 36/40 ficam (D5) e se vale ajustar algo.
+- [x] **T12** Ponto de decisão: auditoria com `cProfile` e medição do B&B com N = 20, 30 e 40. *Pronto quando:* decidido se N = 36/40 ficam (D5) e se vale ajustar algo.
 
 ## Fase 3: Experimentos (21/11 à noite → 22/11)
 - [ ] **T13** `run.py`: executor paralelo, retomável, com limite de segurança (RF4). *Pronto quando:* ensaio com limite de 10 s gera linhas `NA` com os contadores.
