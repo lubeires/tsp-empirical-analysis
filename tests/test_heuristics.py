@@ -3,9 +3,9 @@ import pytest
 from helpers import assert_valid_tour, brute_force, independent_cost, load_test_instances
 
 from tsp.distance import distance_matrix, tour_cost
-from tsp.heuristics import nearest_neighbor, trivial_tour
+from tsp.heuristics import convex_hull_insertion, nearest_neighbor, trivial_tour
 
-HEURISTICS = [trivial_tour, nearest_neighbor]
+HEURISTICS = [trivial_tour, nearest_neighbor, convex_hull_insertion]
 INSTANCES = load_test_instances()
 
 

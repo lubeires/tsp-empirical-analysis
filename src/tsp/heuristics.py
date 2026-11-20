@@ -40,3 +40,65 @@ def nearest_neighbor(coords, dist, prof=None) -> list[int]:
             tour.append(nxt)
             visited[nxt] = True
         return tour
+
+
+def _cross(o, a, b) -> float:
+    """Produto vetorial (a - o) x (b - o).
+
+    > 0: o -> a -> b vira à esquerda (anti-horário); < 0: à direita; = 0: colineares.
+    """
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+
+def convex_hull(coords) -> list[int]:
+    """Fecho convexo pelo método de Andrew (monotone chain). O(n log n).
+
+    Devolve os índices dos vértices do fecho em sentido anti-horário.
+    Pontos colineares na borda NÃO entram (decisão da T07): só os "cantos".
+    """
+    n = len(coords)
+    order = sorted(range(n), key=lambda i: (coords[i][0], coords[i][1]))
+    if n <= 2:
+        return order
+
+    def half(points: list[int]) -> list[int]:
+        chain: list[int] = []
+        for i in points:
+            # Remove o último enquanto a curva não for estritamente à esquerda.
+            # O "<= 0" descarta também os colineares.
+            while len(chain) >= 2 and _cross(coords[chain[-2]], coords[chain[-1]], coords[i]) <= 0:
+                chain.pop()
+            chain.append(i)
+        return chain
+
+    lower = half(order)            # metade de baixo, da esquerda para a direita
+    upper = half(order[::-1])      # metade de cima, da direita para a esquerda
+    # O último de cada metade é o primeiro da outra: removido para não repetir
+    return lower[:-1] + upper[:-1]
+
+
+def convex_hull_insertion(coords, dist, prof=None) -> list[int]:
+    """Começa pelo fecho convexo e insere os demais vértices por inserção mais barata. O(n^3).
+
+    A cada passo escolhe, entre todos os pares (vértice de fora k, aresta (i, j) da rota),
+    o de menor acréscimo d(i,k) + d(k,j) - d(i,j).
+    """
+    prof = prof or Profiler()
+    with prof.timed("hull_insertion"):
+        with prof.timed("convex_hull"):
+            tour = [int(v) for v in convex_hull(coords)]
+
+        with prof.timed("insertion"):
+            in_tour = np.zeros(len(dist), dtype=bool)
+            in_tour[tour] = True
+            remaining = np.flatnonzero(~in_tour)
+            while remaining.size > 0:
+                start = np.array(tour)
+                end = np.roll(start, -1)  # aresta e = (start[e], end[e])
+                # delta[r, e] = acréscimo de inserir remaining[r] na aresta e
+                delta = (dist[np.ix_(remaining, start)] + dist[np.ix_(remaining, end)]
+                         - dist[start, end])
+                r, e = np.unravel_index(np.argmin(delta), delta.shape)
+                tour.insert(int(e) + 1, int(remaining[r]))
+                remaining = np.delete(remaining, r)
+        return tour
