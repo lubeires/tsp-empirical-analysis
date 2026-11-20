@@ -3,7 +3,7 @@
 Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação → implementação → revisão. Marcada como concluída só após a revisão aprovada.
 
 ## Fase 0: Preparação (20/11)
-- [ ] **T01** Criar as pastas, o `.venv`, o `requirements.txt` com versões fixadas e o `.gitignore`. *Pronto quando:* todos os imports funcionam.
+- [x] **T01** Criar as pastas, o `.venv`, o `requirements.txt` com versões fixadas e o `.gitignore`. *Pronto quando:* todos os imports funcionam.
 - [ ] **T02** Baixar da TSPLIB as instâncias de origem e de teste, com os ótimos publicados, e confirmar a lista `EUC_2D` (D1). *Pronto quando:* arquivos em `data/tsplib/`; D1 confirmada ou corrigida.
 
 ## Fase 1: Base (20/11)
