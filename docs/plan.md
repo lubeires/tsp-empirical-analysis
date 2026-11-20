@@ -12,7 +12,7 @@ Descreve *como* implementar `docs/specification.md`, obedecendo a `docs/constitu
 ```
 data/tsplib/        arquivos .tsp originais
 data/instances/     15 instâncias geradas + manifest.csv
-src/tsp/            io.py, distance.py, generate.py, heuristics.py, mst.py,
+src/tsp/            tsplib.py, distance.py, generate.py, heuristics.py, mst.py,
                     approx.py, bnb.py, features.py, instrument.py
 src/experiments/    run.py (executor), profile_memory.py
 src/analysis/       complexity.py, warmstart.py, sensitivity.py, figures.py

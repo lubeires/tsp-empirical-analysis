@@ -4,10 +4,10 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 
 ## Fase 0: Preparação (20/11)
 - [x] **T01** Criar as pastas, o `.venv`, o `requirements.txt` com versões fixadas e o `.gitignore`. *Pronto quando:* todos os imports funcionam.
-- [ ] **T02** Baixar da TSPLIB as instâncias de origem e de teste, com os ótimos publicados, e confirmar a lista `EUC_2D` (D1). *Pronto quando:* arquivos em `data/tsplib/`; D1 confirmada ou corrigida.
+- [x] **T02** Baixar da TSPLIB as instâncias de origem e de teste, com os ótimos publicados, e confirmar a lista `EUC_2D` (D1). *Pronto quando:* arquivos em `data/tsplib/`; D1 confirmada ou corrigida.
 
 ## Fase 1: Base (20/11)
-- [ ] **T03** `io.py` + `distance.py` (leitura e matriz com `nint`). *Pronto quando:* a rota ótima oficial do berlin52 custa 7542.
+- [ ] **T03** `tsplib.py` + `distance.py` (leitura e matriz com `nint`). *Pronto quando:* a rota ótima oficial do berlin52 custa 7542.
 - [ ] **T04** `generate.py`: 12 sub-instâncias + `manifest.csv` (RF1). *Pronto quando:* gerar duas vezes produz arquivos idênticos.
 - [ ] **T05** `instrument.py`: `timed` e modo de memória (RF5). *Pronto quando:* teste com uma função falsa passa.
 
