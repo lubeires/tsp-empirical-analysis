@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from helpers import ROOT, assert_valid_tour, brute_force, independent_cost, load_test_instances
 
-from tsp.approx import twice_around_the_tree
+from tsp.approx import christofides, twice_around_the_tree
 from tsp.distance import distance_matrix, tour_cost
 from tsp.generate import load_optima
 from tsp.mst import prim
@@ -12,7 +12,7 @@ OPTIMA = load_optima(ROOT / "data" / "tsplib")
 FULL = [(n, i) for n, i in INSTANCES if n in ("eil51", "berlin52", "st70")]
 
 # (algoritmo, fator de aproximação garantido)
-APPROX = [(twice_around_the_tree, 2.0)]
+APPROX = [(twice_around_the_tree, 2.0), (christofides, 1.5)]
 
 
 def test_twice_around_hand_example():

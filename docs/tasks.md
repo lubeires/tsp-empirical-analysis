@@ -15,7 +15,7 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 - [x] **T06** Auxiliares de teste (validar rota, força bruta) + rota trivial + vizinho mais próximo. *Pronto quando:* testes do P3 passam.
 - [x] **T07** Fecho convexo + inserção mais barata. *Pronto quando:* testes passam.
 - [x] **T08** `mst.py` (Prim). *Pronto quando:* o custo bate com o `scipy` em instâncias aleatórias.
-- [ ] **T09** Twice-around-the-tree. *Pronto quando:* rota válida e custo ≤ 2 × ótimo.
+- [x] **T09** Twice-around-the-tree. *Pronto quando:* rota válida e custo ≤ 2 × ótimo.
 - [ ] **T10** Christofides (emparelhamento, Hierholzer, atalhos). *Pronto quando:* rota válida e custo ≤ 1,5 × ótimo.
 - [ ] **T11** `bnb.py` (limite inferior, DFS, contadores, prazo). *Pronto quando:* ótimo = força bruta para N ≤ 9 e o prazo interno funciona.
 - [ ] **T12** Ponto de decisão: auditoria com `cProfile` e medição do B&B com N = 20, 30 e 40. *Pronto quando:* decidido se N = 36/40 ficam (D5) e se vale ajustar algo.
