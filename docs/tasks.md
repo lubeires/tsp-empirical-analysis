@@ -13,7 +13,7 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 
 ## Fase 2: Algoritmos (21/11)
 - [x] **T06** Auxiliares de teste (validar rota, força bruta) + rota trivial + vizinho mais próximo. *Pronto quando:* testes do P3 passam.
-- [ ] **T07** Fecho convexo + inserção mais barata. *Pronto quando:* testes passam.
+- [x] **T07** Fecho convexo + inserção mais barata. *Pronto quando:* testes passam.
 - [ ] **T08** `mst.py` (Prim). *Pronto quando:* o custo bate com o `scipy` em instâncias aleatórias.
 - [ ] **T09** Twice-around-the-tree. *Pronto quando:* rota válida e custo ≤ 2 × ótimo.
 - [ ] **T10** Christofides (emparelhamento, Hierholzer, atalhos). *Pronto quando:* rota válida e custo ≤ 1,5 × ótimo.
