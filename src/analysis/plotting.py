@@ -51,7 +51,9 @@ def style(series: list[str]) -> dict[str, tuple[str, str]]:
 
 
 def _save(fig, out_dir: Path, name: str) -> None:
-    fig.savefig(out_dir / f"{name}.pdf", bbox_inches="tight")
+    # Sem data de criação nos metadados: a mesma figura gera o mesmo arquivo, byte a
+    # byte (reprodutibilidade, P5; e o Git não acusa mudança à toa) — T21
+    fig.savefig(out_dir / f"{name}.pdf", bbox_inches="tight", metadata={"CreationDate": None})
     fig.savefig(out_dir / f"{name}.png", bbox_inches="tight", dpi=150)
     plt.close(fig)
 

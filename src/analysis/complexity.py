@@ -172,7 +172,9 @@ def time_samples(runs, profile) -> dict[str, pd.DataFrame]:
 # Análises
 # ---------------------------------------------------------------------------
 
-def analyze_time(samples, rng) -> pd.DataFrame:
+def analyze_time(samples, rng, previous: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Ajustes de tempo. Com `previous` (modo --quick), o bootstrap é pulado e os
+    intervalos de b são reaproveitados da tabela anterior."""
     theory = {name: t for name, *_, t in TIME_SERIES}
     rows = []
     for name, df in samples.items():
@@ -180,7 +182,11 @@ def analyze_time(samples, rng) -> pd.DataFrame:
         n = np.array(sorted(grouped.groups))
         reps = [grouped.get_group(k).to_numpy() for k in n]
         median = np.array([np.median(r) for r in reps])
-        lo, hi = bootstrap_exponent(n, reps, rng)
+        if previous is None:
+            lo, hi = bootstrap_exponent(n, reps, rng)
+        else:
+            old = previous[(previous.series == name) & (previous.model == "a*n^b")]
+            lo, hi = (old.b_ci_low.iloc[0], old.b_ci_high.iloc[0]) if len(old) else (math.nan,) * 2
         for r in fit_models(n, median):
             rows.append({"series": name, "theory": theory[name], **r,
                          "b_ci_low": lo if r["model"] == "a*n^b" else math.nan,
@@ -244,12 +250,14 @@ def write_latex(df: pd.DataFrame, path: Path, caption: str, label: str, headers:
     path.write_text("\n".join(lines) + "\n")
 
 
-def main() -> None:
+def main(argv=None) -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Complexidade empírica (T18)")
+    parser.add_argument("--quick", action="store_true",
+                        help="pula o bootstrap e reaproveita os intervalos já calculados")
     parser.add_argument("--plots-only", action="store_true",
                         help="refaz só as figuras a partir das tabelas já salvas")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     rng = np.random.default_rng(SEED)
     runs, profile, memory = load_data()
@@ -265,7 +273,10 @@ def main() -> None:
         plotting.plot_bnb_nodes(runs, nodes_fits, figures)
         return
 
-    time_fits = analyze_time(samples, rng)
+    previous = None
+    if args.quick and (tables / "complexity_time.csv").exists():
+        previous = pd.read_csv(tables / "complexity_time.csv")
+    time_fits = analyze_time(samples, rng, previous)
     memory_fits = analyze_memory(memory)
     nodes_fits = analyze_bnb_nodes(runs)
 
