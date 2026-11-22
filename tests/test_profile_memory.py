@@ -35,6 +35,6 @@ def test_bnb_profile():
 def test_combinations():
     combos = combinations(MANIFEST)
     bnb = [c for c in combos if c[1] == "bnb"]
-    assert len(combos) == 15 * 5 + 14
+    assert len(combos) == 16 * 5 + 14  # 15 do conjunto + 1 de estresse; B&B sem st70 e n75
     assert {c[0]["instance"] for c in bnb} >= {"eil51", "berlin52"}
     assert "st70" not in {c[0]["instance"] for c in bnb}

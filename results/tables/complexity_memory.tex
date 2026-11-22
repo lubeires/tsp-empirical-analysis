@@ -1,0 +1,16 @@
+\begin{table}[htb]
+\centering
+\caption{Ajuste de complexidade do pico de memória por sub-rotina.}
+\label{tab:complexity-memory}
+\begin{tabular}{llllll}
+\toprule
+Série & Teoria & Melhor modelo & $R^2$ & RMSE rel. (\%) & $b$ livre \\
+\midrule
+distance\_matrix & O(n\^{}2) & n\^{}2 & 0.989 & 3.008 & 1.905 \\
+mst & O(n) & n & 0.789 & 5.807 & 1.217 \\
+insertion & O(n\^{}2) & n\^{}2 log n & 0.998 & 4.634 & 2.447 \\
+matching\_build & O($|$O$|$\^{}2) & n\^{}2 log n & 0.969 & 25.059 & 2.270 \\
+bnb\_search & O(n\^{}2) & n\^{}2 & 0.990 & 4.040 & 1.670 \\
+\bottomrule
+\end{tabular}
+\end{table}

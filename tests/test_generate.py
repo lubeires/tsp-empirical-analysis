@@ -33,9 +33,14 @@ def test_manifest_composition(tmp_path):
     generate(out_dir=tmp_path)
     with (tmp_path / "manifest.csv").open() as f:
         rows = list(csv.DictReader(f))
-    assert len(rows) == 15
-    assert sum(int(r["n"]) <= 40 for r in rows) == 12  # 80% na faixa principal
+    # Conjunto de teste (sub + full): 15 instâncias, 80% com N <= 40 (enunciado)
+    test_set = [r for r in rows if r["kind"] in ("sub", "full")]
+    assert len(test_set) == 15
+    assert sum(int(r["n"]) <= 40 for r in test_set) == 12
     assert all(r["optimum"] for r in rows if r["kind"] == "full")
+    # Teste de estresse fora do conjunto (D30)
+    stress = [r for r in rows if r["kind"] == "stress"]
+    assert [(r["instance"], r["n"]) for r in stress] == [("rd100-n75", "75")]
 
 
 def test_write_read_roundtrip(tmp_path):

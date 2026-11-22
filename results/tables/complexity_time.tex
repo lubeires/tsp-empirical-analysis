@@ -1,0 +1,21 @@
+\begin{table}[htb]
+\centering
+\caption{Ajuste de complexidade do tempo (mediana de 30 repetições).}
+\label{tab:complexity-time}
+\begin{tabular}{lllllll}
+\toprule
+Série & Teoria & Melhor modelo & $R^2$ & RMSE rel. (\%) & $b$ livre & IC 95\% de $b$ \\
+\midrule
+trivial & O(n) & n\^{}3 & -0.264 & 24.887 & 4.969 & [0.10, 5.00] \\
+nn & O(n\^{}2) & n & 0.943 & 10.403 & 1.052 & [0.98, 1.29] \\
+hull & O(n\^{}3) & n\^{}2 & 0.902 & 15.382 & 1.304 & [1.28, 1.36] \\
+twice\_around & O(n\^{}2) & n & 0.988 & 6.293 & 1.309 & [1.07, 1.51] \\
+christofides & O(n\^{}3) & n\^{}3 & 0.934 & 23.925 & 2.840 & [2.72, 2.97] \\
+mst & O(n\^{}2) & n & 0.989 & 6.155 & 1.295 & [1.08, 1.51] \\
+insertion & O(n\^{}3) & n\^{}2 & 0.904 & 15.990 & 1.361 & [1.33, 1.41] \\
+matching\_build & O($|$O$|$\^{}2) & n\^{}3 & 0.908 & 25.191 & 2.646 & [2.52, 2.79] \\
+matching & O($|$O$|$\^{}3) & n\^{}3 & 0.945 & 28.037 & 2.983 & [2.89, 3.11] \\
+euler & O(n) & n & 0.874 & 11.650 & 1.418 & [1.17, 1.70] \\
+\bottomrule
+\end{tabular}
+\end{table}

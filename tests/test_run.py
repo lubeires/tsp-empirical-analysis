@@ -29,7 +29,7 @@ def hang_worker(conn, task):
 
 def test_tasks_sorted_by_size():
     tasks = build_tasks("bnb", MANIFEST, time_limit=10)
-    assert len(tasks) == 15 * 5
+    assert len(tasks) == 16 * 5  # 15 do conjunto + 1 de estresse (D30)
     sizes = [t.n for t in tasks]
     assert sizes == sorted(sizes)
 

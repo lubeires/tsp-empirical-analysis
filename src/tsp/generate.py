@@ -31,6 +31,10 @@ SUB_INSTANCES = [
 # Faixa limite: instâncias completas, usadas direto de data/tsplib/
 FULL_INSTANCES = ["eil51", "berlin52", "st70"]
 
+# Teste de estresse do B&B (D30): FORA do conjunto de teste de 15 instâncias
+# (que precisa ter 80% com N <= 40); usado só na análise do ponto de colapso.
+STRESS_INSTANCES = [("rd100", 75)]
+
 MANIFEST_FIELDS = ["instance", "n", "kind", "source", "seed", "indices", "optimum", "path"]
 
 
@@ -60,17 +64,20 @@ def generate(out_dir: Path = INSTANCES_DIR, tsplib_dir: Path = TSPLIB_DIR) -> li
     optima = load_optima(tsplib_dir)
     rows = []
 
-    for i, (source_name, n) in enumerate(SUB_INSTANCES):
+    def sampled_row(i: int, source_name: str, n: int, kind: str) -> dict:
         seed = SEED_BASE + i
         source = read_tsp(tsplib_dir / f"{source_name}.tsp")
         sub, indices = sample_instance(source, n, seed)
         write_tsp(sub, out_dir / f"{sub.name}.tsp",
                   comment=f"Subconjunto de {source_name} (seed {seed})")
-        rows.append({
-            "instance": sub.name, "n": n, "kind": "sub", "source": source_name,
+        return {
+            "instance": sub.name, "n": n, "kind": kind, "source": source_name,
             "seed": seed, "indices": " ".join(map(str, indices)), "optimum": "",
             "path": f"data/instances/{sub.name}.tsp",
-        })
+        }
+
+    for i, (source_name, n) in enumerate(SUB_INSTANCES):
+        rows.append(sampled_row(i, source_name, n, "sub"))
 
     for name in FULL_INSTANCES:
         n = read_tsp(tsplib_dir / f"{name}.tsp").n
@@ -79,6 +86,10 @@ def generate(out_dir: Path = INSTANCES_DIR, tsplib_dir: Path = TSPLIB_DIR) -> li
             "seed": "", "indices": "", "optimum": optima[name],
             "path": f"data/tsplib/{name}.tsp",
         })
+
+    # Sementes continuam a sequência das sub-instâncias (as já existentes não mudam)
+    for j, (source_name, n) in enumerate(STRESS_INSTANCES):
+        rows.append(sampled_row(len(SUB_INSTANCES) + j, source_name, n, "stress"))
 
     with (out_dir / "manifest.csv").open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=MANIFEST_FIELDS)

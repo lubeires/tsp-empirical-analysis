@@ -22,9 +22,9 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 
 ## Fase 3: Experimentos (21/11 à noite → 22/11)
 - [x] **T13** `run.py`: executor paralelo, retomável, com limite de segurança (RF4). *Pronto quando:* ensaio com limite de 10 s gera linhas `NA` com os contadores.
-- [ ] **T14** Rodar aproximados e heurísticas em sequência. *Pronto quando:* `runs.csv` completo para esses algoritmos.
-- [ ] **T15** Disparar o B&B completo (75 execuções). *Pronto quando:* em andamento; o resto da fase segue em paralelo.
-- [ ] **T16** `profile_memory.py` (RF5). *Pronto quando:* `profile.csv` com os picos de memória.
+- [x] **T14** Rodar aproximados e heurísticas em sequência. *Pronto quando:* `runs.csv` completo para esses algoritmos.
+- [x] **T15** Disparar o B&B completo (75 execuções). *Pronto quando:* em andamento; o resto da fase segue em paralelo.
+- [x] **T16** `profile_memory.py` (RF5). *Pronto quando:* `profile.csv` com os picos de memória.
 - [x] **T17** `features.py` + `features.csv` (RF6). *Pronto quando:* 15 linhas sem valores faltando.
 
 ## Fase 4: Análises (22/11)
