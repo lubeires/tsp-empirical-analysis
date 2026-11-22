@@ -25,7 +25,7 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 - [ ] **T14** Rodar aproximados e heurísticas em sequência. *Pronto quando:* `runs.csv` completo para esses algoritmos.
 - [ ] **T15** Disparar o B&B completo (75 execuções). *Pronto quando:* em andamento; o resto da fase segue em paralelo.
 - [ ] **T16** `profile_memory.py` (RF5). *Pronto quando:* `profile.csv` com os picos de memória.
-- [ ] **T17** `features.py` + `features.csv` (RF6). *Pronto quando:* 15 linhas sem valores faltando.
+- [x] **T17** `features.py` + `features.csv` (RF6). *Pronto quando:* 15 linhas sem valores faltando.
 
 ## Fase 4: Análises (22/11)
 - [ ] **T18** `complexity.py`: curvas com R² e RMSE (RF7a). *Pronto quando:* tabela e figura geradas.
