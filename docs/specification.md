@@ -36,7 +36,7 @@ Nós expandidos, nós podados, profundidade máxima, número de melhorias do lim
 Tempo e pico de memória das sub-rotinas: matriz de distâncias, MST, vértices de grau ímpar, emparelhamento, circuito euleriano, atalhos, cálculo do limite inferior, fecho convexo e inserção.
 
 ### RF6 – Características das instâncias
-N; razão de aspecto do retângulo envolvente; proporção de pontos no fecho convexo; entropia espacial (grade); grau máximo e grau médio na MST; coeficiente de variação da distância ao vizinho mais próximo.
+N; razão de aspecto do retângulo envolvente; proporção de pontos no fecho convexo (com os colineares da borda); entropia espacial (grade); índice de Clark-Evans; grau máximo e proporção de folhas na MST (o grau médio é constante em qualquer árvore, D29); proporção de vértices de grau ímpar na MST; coeficiente de variação da distância ao vizinho mais próximo.
 
 ### RF7 – Análises
 - **(a) Complexidade empírica:** ajuste de curvas candidatas de tempo e memória em função de N, com R² e RMSE.

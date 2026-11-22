@@ -50,24 +50,35 @@ def _cross(o, a, b) -> float:
     return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
 
 
-def convex_hull(coords) -> list[int]:
+def convex_hull(coords, include_collinear: bool = False) -> list[int]:
     """Fecho convexo pelo método de Andrew (monotone chain). O(n log n).
 
-    Devolve os índices dos vértices do fecho em sentido anti-horário.
-    Pontos colineares na borda NÃO entram (decisão da T07): só os "cantos".
+    Devolve os índices dos pontos do fecho em sentido anti-horário.
+    - include_collinear=False (padrão, usado pela heurística, T07): só os "cantos".
+    - include_collinear=True (usado na característica hull_ratio, T17): também os
+      pontos colineares que ficam sobre a borda.
     """
     n = len(coords)
     order = sorted(range(n), key=lambda i: (coords[i][0], coords[i][1]))
     if n <= 2:
         return order
+    if include_collinear and all(
+            _cross(coords[order[0]], coords[order[-1]], coords[i]) == 0 for i in order):
+        # Todos alinhados: todos estão na "borda". Sem este caso, as duas metades
+        # repetiriam os pontos do meio.
+        return order
 
     def half(points: list[int]) -> list[int]:
         chain: list[int] = []
         for i in points:
-            # Remove o último enquanto a curva não for estritamente à esquerda.
-            # O "<= 0" descarta também os colineares.
-            while len(chain) >= 2 and _cross(coords[chain[-2]], coords[chain[-1]], coords[i]) <= 0:
-                chain.pop()
+            # Remove o último enquanto a curva não for à esquerda.
+            # Com "<= 0" os colineares também saem; com "< 0" eles ficam.
+            while len(chain) >= 2:
+                turn = _cross(coords[chain[-2]], coords[chain[-1]], coords[i])
+                if turn < 0 or (turn == 0 and not include_collinear):
+                    chain.pop()
+                else:
+                    break
             chain.append(i)
         return chain
 

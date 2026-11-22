@@ -21,7 +21,7 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 - [x] **T12** Ponto de decisão: auditoria com `cProfile` e medição do B&B com N = 20, 30 e 40. *Pronto quando:* decidido se N = 36/40 ficam (D5) e se vale ajustar algo.
 
 ## Fase 3: Experimentos (21/11 à noite → 22/11)
-- [ ] **T13** `run.py`: executor paralelo, retomável, com limite de segurança (RF4). *Pronto quando:* ensaio com limite de 10 s gera linhas `NA` com os contadores.
+- [x] **T13** `run.py`: executor paralelo, retomável, com limite de segurança (RF4). *Pronto quando:* ensaio com limite de 10 s gera linhas `NA` com os contadores.
 - [ ] **T14** Rodar aproximados e heurísticas em sequência. *Pronto quando:* `runs.csv` completo para esses algoritmos.
 - [ ] **T15** Disparar o B&B completo (75 execuções). *Pronto quando:* em andamento; o resto da fase segue em paralelo.
 - [ ] **T16** `profile_memory.py` (RF5). *Pronto quando:* `profile.csv` com os picos de memória.

@@ -2,7 +2,7 @@
 
 Uso (na raiz do projeto):
     .venv/bin/python -m experiments.run bnb    --workers 6 --time-limit 1800
-    .venv/bin/python -m experiments.run approx --repetitions 5
+    .venv/bin/python -m experiments.run approx --repetitions 30 [--gc both|on|off]
 
 Grupos:
 - bnb:    uma execução por (instância, estratégia de warm-start), em paralelo (D12).
@@ -20,11 +20,20 @@ Robustez (P6):
 - Retomada: a última linha incompleta do CSV é descartada; tarefas concluídas (ok/NA)
   são puladas; tarefas killed/error são repetidas uma única vez.
 - Tarefas ordenadas das instâncias menores para as maiores.
+- Grupo approx com e sem coletor de lixo (opção --gc, padrão both): as duas variantes
+  são intercaladas por (instância, algoritmo), alternando qual vem primeiro, para que
+  variações de carga da máquina afetem as duas igualmente (D26, D27).
+- Laço interno (approx): cada medição executa o algoritmo k vezes seguidas, com k
+  calibrado para somar pelo menos MIN_MEASURE_S, e divide o tempo por k (como o timeit).
+  Tempos abaixo de 1 ms ficam perto da resolução do relógio e do tamanho de uma
+  interrupção do sistema operacional (D27).
 """
 
 import argparse
 import csv
+import gc
 import json
+import math
 import multiprocessing as mp
 import os
 import resource
@@ -58,7 +67,7 @@ STRATEGIES = {
 
 RUN_FIELDS = [
     "run_id", "instance", "n", "group", "algorithm", "strategy", "repetition",
-    "status", "time_limit", "cost", "time_total", "time_heuristic",
+    "status", "time_limit", "gc_enabled", "inner_loops", "cost", "time_total", "time_heuristic",
     "nodes_expanded", "nodes_pruned", "max_depth", "ub_improvements",
     "bound_iterations", "root_bound", "gc_collections", "max_rss_kb",
     "ub_history", "tour", "started_at",
@@ -70,6 +79,8 @@ DONE = {"ok", "NA"}          # concluídas: não rodam de novo
 RETRYABLE = {"killed", "error"}
 MAX_ATTEMPTS = 2             # killed/error: repete uma única vez
 SAFETY_MARGIN = 60.0         # segundos além do time_limit antes de matar o processo
+MIN_MEASURE_S = 0.02         # duração mínima de cada medição com laço interno (D27)
+MAX_INNER_LOOPS = 10_000
 
 
 @dataclass
@@ -82,10 +93,11 @@ class Task:
     strategy: str
     repetitions: int
     time_limit: float
+    gc_enabled: bool = True
 
     def keys(self) -> list[tuple]:
-        """Chaves (instance, algorithm, strategy, repetition) das linhas que a tarefa gera."""
-        return [(self.instance, self.algorithm, self.strategy, str(r))
+        """Chaves (instance, algorithm, strategy, repetition, gc_enabled) das linhas da tarefa."""
+        return [(self.instance, self.algorithm, self.strategy, str(r), str(self.gc_enabled))
                 for r in range(self.repetitions)]
 
 
@@ -99,20 +111,28 @@ def load_manifest() -> list[dict]:
 
 
 def build_tasks(group: str, manifest: list[dict], time_limit: float, repetitions: int = 5,
-                instances=None, strategies=None) -> list[Task]:
-    """Tarefas do grupo, das instâncias menores para as maiores."""
+                instances=None, strategies=None, gc_variants=(True,)) -> list[Task]:
+    """Tarefas do grupo, das instâncias menores para as maiores.
+
+    approx: uma tarefa por variante de coletor de lixo em `gc_variants`, intercaladas
+    por (instância, algoritmo) e alternando a ordem a cada par (D27).
+    """
     rows = [r for r in manifest if instances is None or r["instance"] in instances]
     rows.sort(key=lambda r: (int(r["n"]), r["instance"]))
     names = [s for s in STRATEGIES if strategies is None or s in strategies]
     tasks = []
+    pair = 0
     for row in rows:
         for name in names:
             if group == "bnb":
                 tasks.append(Task("bnb", row["instance"], int(row["n"]), row["path"],
                                   "bnb", name, 1, time_limit))
             else:
-                tasks.append(Task("approx", row["instance"], int(row["n"]), row["path"],
-                                  name, "", repetitions, time_limit))
+                variants = list(gc_variants) if pair % 2 == 0 else list(gc_variants)[::-1]
+                pair += 1
+                for gc_enabled in variants:
+                    tasks.append(Task("approx", row["instance"], int(row["n"]), row["path"],
+                                      name, "", repetitions, time_limit, gc_enabled))
     return tasks
 
 
@@ -129,7 +149,7 @@ def _base_row(task: Task, repetition: int, run_id: str) -> dict:
     return {
         "run_id": run_id, "instance": task.instance, "n": task.n, "group": task.group,
         "algorithm": task.algorithm, "strategy": task.strategy, "repetition": repetition,
-        "time_limit": task.time_limit,
+        "time_limit": task.time_limit, "gc_enabled": task.gc_enabled, "inner_loops": 1,
         "started_at": datetime.now().isoformat(timespec="seconds"),
     }
 
@@ -174,28 +194,49 @@ def bnb_worker(conn, task: Task) -> None:
 
 
 def approx_worker(conn, task: Task) -> None:
-    """Um processo por (instância, algoritmo): aquecimento descartado + repetições."""
+    """Um processo por (instância, algoritmo, variante de GC): aquecimento + repetições.
+
+    Cada repetição executa o algoritmo `inner_loops` = k vezes seguidas (k calibrado
+    para somar >= MIN_MEASURE_S) e grava o tempo POR EXECUÇÃO (total / k). No profile,
+    calls e time_s também são por execução. gc_collections é o total das k execuções
+    (contagem de eventos); por execução, divida por inner_loops.
+    """
     try:
         instance = read_tsp(ROOT / task.path)
         dist = distance_matrix(instance.coords)
         algorithm = STRATEGIES[task.algorithm]
         # Aquecimento: importações tardias, caches etc. ficam fora das medições
         algorithm(instance.coords, dist, Profiler())
+        if not task.gc_enabled:
+            # Variante sem coletor de lixo (D26): coleta o que houver e desliga
+            # durante as repetições medidas. O processo termina logo depois.
+            gc.collect()
+            gc.disable()
+
+        # Calibração do laço interno: uma execução medida isoladamente
+        start = time.perf_counter()
+        algorithm(instance.coords, dist, Profiler())
+        single = time.perf_counter() - start
+        k = max(1, min(MAX_INNER_LOOPS, math.ceil(MIN_MEASURE_S / max(single, 1e-9))))
 
         rows, profile = [], []
         for rep in range(task.repetitions):
             row = _base_row(task, rep, uuid.uuid4().hex)
             prof = Profiler()
             start = time.perf_counter()
-            tour = algorithm(instance.coords, dist, prof)
-            elapsed = time.perf_counter() - start
+            for _ in range(k):
+                tour = algorithm(instance.coords, dist, prof)
+            elapsed = (time.perf_counter() - start) / k
             row.update({
-                "status": "ok", "cost": tour_cost(tour, dist), "time_total": elapsed,
-                "time_heuristic": elapsed, "gc_collections": prof.gc_collections(),
-                "tour": " ".join(map(str, tour)),
+                "status": "ok", "inner_loops": k, "cost": tour_cost(tour, dist),
+                "time_total": elapsed, "time_heuristic": elapsed,
+                "gc_collections": prof.gc_collections(), "tour": " ".join(map(str, tour)),
             })
             rows.append(row)
-            profile += _profile_rows(prof, row)
+            for prof_row in _profile_rows(prof, row):  # por execução
+                prof_row["calls"] //= k
+                prof_row["time_s"] /= k
+                profile.append(prof_row)
         rss = _max_rss_kb()  # pico do processo inteiro (igual para as repetições)
         for row in rows:
             row["max_rss_kb"] = rss
@@ -246,7 +287,8 @@ def pending_tasks(tasks: list[Task], runs_path: Path) -> list[Task]:
     if runs_path.exists():
         with runs_path.open() as f:
             for row in csv.DictReader(f):
-                key = (row["instance"], row["algorithm"], row["strategy"], row["repetition"])
+                key = (row["instance"], row["algorithm"], row["strategy"], row["repetition"],
+                       row["gc_enabled"])
                 if row["status"] in DONE:
                     done.add(key)
                 elif row["status"] in RETRYABLE:
@@ -341,14 +383,18 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=6,
                         help="processos em paralelo (só para bnb; approx é sempre 1)")
     parser.add_argument("--time-limit", type=float, default=1800.0)
-    parser.add_argument("--repetitions", type=int, default=5)
+    parser.add_argument("--repetitions", type=int, default=30)
+    parser.add_argument("--gc", choices=["on", "off", "both"], default="both",
+                        help="approx: coletor de lixo ligado, desligado ou as duas variantes "
+                             "intercaladas (padrão both); bnb: sempre ligado")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "results")
     parser.add_argument("--instances", nargs="*", help="filtra instâncias (padrão: todas)")
     parser.add_argument("--strategies", nargs="*", help="filtra estratégias/algoritmos")
     args = parser.parse_args()
 
     tasks = build_tasks(args.group, load_manifest(), args.time_limit, args.repetitions,
-                        args.instances, args.strategies)
+                        args.instances, args.strategies,
+                        gc_variants={"on": (True,), "off": (False,), "both": (True, False)}[args.gc])
     workers = args.workers if args.group == "bnb" else 1  # D12: approx em sequência
     run_tasks(tasks, args.out_dir, workers)
 
