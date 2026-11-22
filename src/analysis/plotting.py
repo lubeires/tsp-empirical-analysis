@@ -155,3 +155,132 @@ def plot_bnb_nodes(runs, fits, out_dir: Path) -> None:
                  loc="left")
     _legend_below(ax)
     _save(fig, out_dir, "complexity_bnb_nodes")
+
+
+# ---------------------------------------------------------------------------
+# Figuras da T19 (warm-start e colapso)
+# ---------------------------------------------------------------------------
+
+FIND = "#6b6a64"    # cinza escuro: tempo até achar a rota ótima
+PROVE = "#c9c8c1"   # cinza claro: tempo para provar a otimalidade
+LIMIT_LINE = "#8a8983"
+
+
+def plot_nodes_ratio(df, out_dir: Path) -> None:
+    """Razão de nós em relação à rota trivial, por instância (ordenada por N)."""
+    colors = style(ENTITY_ORDER)
+    order = df.drop_duplicates("instance").sort_values("n")
+    x = {inst: i for i, inst in enumerate(order.instance)}
+    others = [s for s in ENTITY_ORDER if s != "trivial"]
+    offsets = dict(zip(others, np.linspace(-0.24, 0.24, len(others))))
+    fig, ax = plt.subplots(figsize=(6.3, 3.9))
+    ax.axhline(1, color=LIMIT_LINE, linewidth=1, linestyle="--")
+    ax.text(-0.4, 1.12, "linha tracejada = rota trivial", color=MUTED, ha="left", fontsize=8)
+    for s in others:
+        g = df[df.strategy == s]
+        color, marker = colors[s]
+        ax.plot([x[i] + offsets[s] for i in g.instance], g.nodes_ratio, marker, color=color,
+                markersize=5, markeredgecolor=SURFACE, markeredgewidth=0.8, label=LABELS[s],
+                linestyle="none")
+    ax.set_yscale("log")
+    ax.set_xticks(range(len(x)))
+    ax.set_xticklabels([f"{i}\n(N={n})" for i, n in zip(order.instance, order.n)],
+                       rotation=60, ha="right", fontsize=7)
+    ax.set_ylabel("Nós expandidos ÷ nós da rota trivial")
+    ax.set_title("Redução da árvore de busca por rota inicial (escala log)", loc="left")
+    ax.grid(axis="x", visible=False)
+    ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(0, -0.36), ncol=4,
+              handletextpad=0.3, columnspacing=1.2)
+    _save(fig, out_dir, "warmstart_nodes_ratio")
+
+
+def plot_gap_vs_nodes(df, out_dir: Path) -> None:
+    """Gap da rota inicial x razão de nós em relação à trivial."""
+    colors = style(ENTITY_ORDER)
+    fig, ax = plt.subplots(figsize=(6.3, 3.6))
+    for s in ENTITY_ORDER:
+        g = df[df.strategy == s]
+        color, marker = colors[s]
+        ax.plot(g.initial_gap_pct, g.nodes_ratio, marker, color=color, markersize=5,
+                markeredgecolor=SURFACE, markeredgewidth=0.8, label=LABELS[s], linestyle="none")
+    ax.set_xscale("symlog", linthresh=1)
+    ax.set_yscale("log")
+    ax.set_xlabel("Gap da rota inicial em relação ao ótimo (%)")
+    ax.set_ylabel("Nós ÷ nós da rota trivial")
+    ax.set_title("Qualidade da rota inicial x tamanho da árvore", loc="left")
+    _legend_below(ax)
+    _save(fig, out_dir, "warmstart_gap_vs_nodes")
+
+
+def plot_find_vs_prove(df, out_dir: Path, limit: float) -> None:
+    """Barras empilhadas por estratégia: achar a melhor rota + provar a otimalidade.
+
+    Em execuções NA (prazo estourado), o 1º segmento é a melhor rota encontrada (não
+    provada ótima) e o 2º, hachurado, é a busca até o prazo sem conclusão.
+    """
+    instances = list(df.sort_values("n").instance.unique())
+    fig, axes = plt.subplots(1, len(instances), figsize=(6.3, 3.1), sharey=True)
+    axes = np.atleast_1d(axes)
+    y = np.arange(len(ENTITY_ORDER))
+    for ax, inst in zip(axes, instances):
+        g = df[df.instance == inst].set_index("strategy").loc[ENTITY_ORDER]
+        find = g.t_found.to_numpy() / 60
+        total = g.time_total.to_numpy() / 60
+        na = (g.status == "NA").to_numpy()
+        prove = np.where(na, 0.0, total - find)
+        unfinished = np.where(na, total - find, 0.0)
+        ax.barh(y, find, color=FIND, height=0.6, label="achar a melhor rota")
+        ax.barh(y, prove, left=find, color=PROVE, height=0.6, edgecolor=SURFACE,
+                linewidth=1.5, label="provar a otimalidade")
+        ax.barh(y, unfinished, left=find, color=SURFACE, height=0.6, edgecolor=FIND,
+                linewidth=0.8, hatch="////", label="busca até o prazo, sem prova (NA)")
+        ax.axvline(limit / 60, color=LIMIT_LINE, linewidth=1, linestyle="--")
+        ax.set_title(f"{inst} (N={int(g.n.iloc[0])})" + ("  —  NA" if na.all() else ""),
+                     loc="left")
+        ax.set_xlabel("Minutos")
+        ax.grid(axis="y", visible=False)
+    axes[0].set_yticks(y)
+    axes[0].set_yticklabels([LABELS[s] for s in ENTITY_ORDER])
+    axes[0].invert_yaxis()
+    handles, labels = [], []
+    for ax in axes:  # junta as entradas de todos os painéis, sem repetir
+        for h, lab in zip(*ax.get_legend_handles_labels()):
+            if lab not in labels:
+                handles.append(h)
+                labels.append(lab)
+    fig.legend(handles, labels, frameon=False, loc="upper left", bbox_to_anchor=(0.02, 0.0),
+               ncol=3, fontsize=8)
+    fig.suptitle("Tempo do B&B: achar × provar (tracejado = prazo de 30 min)",
+                 x=0.02, y=1.04, ha="left", fontsize=10)
+    _save(fig, out_dir, "warmstart_find_vs_prove")
+
+
+def plot_collapse(test, stress, collapse, out_dir: Path, limit: float) -> None:
+    """Tempo x N (semilog) com o ajuste exponencial, o prazo e a instância de estresse."""
+    colors = style(ENTITY_ORDER)
+    fig, ax = plt.subplots(figsize=(6.3, 3.9))
+    grid = np.linspace(test.n.min(), 80, 200)
+    for s in ENTITY_ORDER:
+        g = test[test.strategy == s]
+        fit = collapse[collapse.strategy == s].iloc[0]
+        color, marker = colors[s]
+        ax.plot(grid, np.exp(fit.alpha + fit.beta * grid), color=color, linewidth=1.2, alpha=0.8)
+        ax.plot(g.n, g.time_total, marker, color=color, markersize=5, markeredgecolor=SURFACE,
+                markeredgewidth=0.8, linestyle="none",
+                label=f"{LABELS[s]} (N previsto = {fit.n_collapse:.0f})")
+        st = stress[stress.strategy == s]
+        if len(st):
+            r = st.iloc[0]
+            filled = r.status == "ok"
+            ax.plot(r.n, r.time_total, marker, markersize=8, linestyle="none",
+                    color=color if filled else SURFACE, markeredgecolor=color,
+                    markeredgewidth=1.5)
+    ax.axhline(limit, color=LIMIT_LINE, linewidth=1, linestyle="--")
+    ax.text(grid.min(), limit * 1.25, "prazo de 30 min", color=MUTED, fontsize=8)
+    ax.set_yscale("log")
+    ax.set_xlabel("N (vértices)")
+    ax.set_ylabel("Tempo do B&B (s)")
+    ax.set_title("Ponto de colapso do B&B (marcador grande: rd100-n75; vazado = NA)",
+                 loc="left")
+    _legend_below(ax)
+    _save(fig, out_dir, "collapse")

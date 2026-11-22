@@ -1,0 +1,16 @@
+\begin{table}[htb]
+\centering
+\caption{Ponto de colapso: ajuste $\log t = \alpha + \beta n$ nas 15 instâncias e resultado observado na instância de estresse rd100-n75.}
+\label{tab:collapse}
+\begin{tabular}{llllll}
+\toprule
+Rota inicial & $e^{\beta}$ & N previsto (30 min) & Previsto N=75 (s) & Obs. N=75 & Tempo obs. (s) \\
+\midrule
+trivial & 1.160 & 74.757 & 1866.0 & NA & 1800.0 \\
+nn & 1.156 & 75.335 & 1714.6 & NA & 1800.0 \\
+hull & 1.156 & 78.142 & 1141.9 & NA & 1800.0 \\
+twice\_around & 1.158 & 75.007 & 1798.3 & NA & 1800.0 \\
+christofides & 1.161 & 74.838 & 1844.1 & NA & 1800.0 \\
+\bottomrule
+\end{tabular}
+\end{table}

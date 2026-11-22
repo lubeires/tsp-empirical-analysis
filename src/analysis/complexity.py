@@ -146,7 +146,7 @@ def fit_exponential(n, nodes) -> dict:
 def load_data():
     manifest = pd.read_csv(ROOT / "data" / "instances" / "manifest.csv")
     kind = dict(zip(manifest.instance, manifest.kind))
-    runs = pd.read_csv(RESULTS / "runs.csv")
+    runs = pd.read_csv(RESULTS / "runs.csv", keep_default_na=False, na_values=[""])  # "NA" é status, não ausente
     runs = runs[runs.instance.map(kind).isin(TEST_KINDS)]
     profile = pd.read_csv(RESULTS / "profile.csv")
     memory = pd.read_csv(RESULTS / "profile_memory.csv")
@@ -239,7 +239,7 @@ def write_latex(df: pd.DataFrame, path: Path, caption: str, label: str, headers:
     lines = [r"\begin{table}[htb]", r"\centering", rf"\caption{{{caption}}}", rf"\label{{{label}}}",
              r"\begin{tabular}{" + "l" * len(cols) + "}", r"\toprule",
              " & ".join(headers[c] for c in cols) + r" \\", r"\midrule"]
-    lines += [" & ".join(fmt(row[c]) for c in cols) + r" \\" for _, row in df.iterrows()]
+    lines += [" & ".join(fmt(row.get(c, math.nan)) for c in cols) + r" \\" for _, row in df.iterrows()]
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
     path.write_text("\n".join(lines) + "\n")
 
