@@ -1,0 +1,80 @@
+\section{Experimentos e Resultados}\label{sec:experiments}
+
+\subsection{Configuração experimental}\label{sec:setup}
+
+\paragraph{Instâncias.} A menor instância \texttt{EUC\_2D} da TSPLIB tem 51 vértices, e
+com até 75 vértices só existem eil51, berlin52 e st70. Para cobrir a faixa
+$12 \leq N \leq 40$ exigida, foram geradas 12 sub-instâncias sorteando $N$ pontos, com
+semente fixa, de seis instâncias maiores com geometrias diferentes: duas com pontos
+espalhados de modo uniforme (kroA100 e rd100) e quatro com estrutura de grade ou
+agrupamentos (pr76, lin105, pr107 e d198). Os pontos mantêm a ordem do arquivo original,
+o que define a rota trivial. O conjunto de teste tem 15 instâncias, das quais 12 (80\%)
+têm $N \leq 40$ (Tabela~\ref{tab:instances}). Uma 16.ª instância, rd100-n75, é usada só
+na análise do ponto de colapso; incluí-la no conjunto baixaria a proporção para 75\%.
+Nas sub-instâncias, o ótimo de referência é o provado pelo próprio B\&B; nas completas, o
+B\&B reproduziu os ótimos publicados.
+
+\begin{table}[htb]
+\centering
+\caption{Instâncias. Ótimo provado pelo B\&B (nas completas, igual ao publicado). Na
+rd100-n75, melhor custo encontrado em 30 minutos.}
+\label{tab:instances}
+\footnotesize
+\begin{tabular}{lrlr@{\hspace{2.5em}}lrlr}
+\toprule
+Instância & $N$ & Origem & Ótimo & Instância & $N$ & Origem & Ótimo \\
+\midrule
+kroA100-n12 & 12 & uniforme  &  8\,222 & pr107-n27   & 27 & estruturada &  31\,600 \\
+rd100-n14   & 14 & uniforme  &  3\,408 & d198-n30    & 30 & estruturada &   8\,382 \\
+pr76-n16    & 16 & estruturada & 48\,894 & kroA100-n33 & 33 & uniforme &  15\,397 \\
+lin105-n18  & 18 & estruturada &  8\,820 & lin105-n36  & 36 & estruturada &   9\,453 \\
+pr107-n20   & 20 & estruturada & 29\,160 & rd100-n40   & 40 & uniforme &   5\,119 \\
+d198-n22    & 22 & estruturada & 10\,302 & eil51       & 51 & completa &     426 \\
+pr76-n24    & 24 & estruturada & 61\,435 & berlin52    & 52 & completa &   7\,542 \\
+            &    &           &         & st70        & 70 & completa &     675 \\
+\midrule
+\multicolumn{8}{l}{Estresse: rd100-n75 ($N = 75$, uniforme), melhor custo 7\,205 (não provado).} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Ambiente.} Intel Core i5-1135G7 (4 núcleos, 8 \emph{threads}, 2{,}4~GHz) com
+3~GB de memória, Linux sob WSL2, Python 3.12.3, NumPy 2.5.5, SciPy 1.18.1, NetworkX 3.7,
+pandas 3.1.1, scikit-learn 1.9.1 e matplotlib 3.11.2. Todas as sementes são fixas, e um
+único comando refaz todas as tabelas e figuras a partir dos dados brutos.
+
+\paragraph{Protocolo.} Cada execução roda num processo próprio, criado do zero, e grava
+uma linha num arquivo CSV logo ao terminar, de modo que uma interrupção não perde dados
+e a rodada pode ser retomada.
+\begin{itemize}
+  \item \textbf{Heurísticas e aproximados} (5 algoritmos): execução em sequência, uma
+    execução de aquecimento descartada e 30 repetições medidas, cada uma com o coletor
+    de lixo ligado e desligado (variantes intercaladas), totalizando 4\,500 medições no
+    conjunto de teste. Para que cada medição fique bem acima da resolução do relógio, uma
+    repetição executa o algoritmo $k$ vezes seguidas, com $k$ calibrado para somar ao
+    menos 20~ms, e registra o tempo por execução. As curvas de complexidade usam a
+    mediana das 30 repetições.
+  \item \textbf{B\&B} (5 rotas iniciais $\times$ 15 instâncias = 75 execuções): o
+    algoritmo é determinístico, então uma execução por combinação basta para a contagem de
+    nós. O prazo é de 30 minutos, incluindo a heurística inicial; ao vencer, a execução é
+    registrada como \texttt{NA}, com a melhor rota e os contadores parciais. Para caber no
+    cronograma, as execuções rodaram com seis processos em paralelo, o que distorce os
+    tempos absolutos por disputa de memória e \emph{cache}. Por isso as curvas de
+    complexidade usam só as execuções em sequência, e a análise de \emph{warm-start}
+    compara principalmente o número de nós, que não depende da carga da máquina.
+  \item \textbf{Memória:} uma execução por combinação com \texttt{tracemalloc}, separada
+    das execuções de tempo. As alocações são determinísticas, então uma execução basta.
+\end{itemize}
+
+% TODO(T23): resultados
+\subsection{Complexidade empírica}\label{sec:complexity}
+
+\emph{[Seção a ser escrita na T23.]}
+
+\subsection{Impacto do \emph{warm-start}}\label{sec:warmstart}
+
+\emph{[Seção a ser escrita na T23.]}
+
+\subsection{Análise de sensibilidade}\label{sec:sensitivity}
+
+\emph{[Seção a ser escrita na T23.]}

@@ -1,0 +1,71 @@
+% Artigo do TP2 de Algoritmos 2 (UFMG) no modelo da SBC.
+% Compilar na pasta report/:  latexmk -pdf main.tex
+% Tabelas e figuras vêm direto de ../results/ (geradas por `python -m analysis`),
+% então o artigo nunca fica desatualizado em relação aos dados.
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx,url}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{microtype}
+% hyperref fica de fora: conflita com o sbc-template.sty no TeX Live 2023
+
+\graphicspath{{../results/figures/}}
+\newcommand{\results}[1]{../results/tables/#1}
+
+\sloppy
+
+\title{Algoritmos Exatos e Aproximados para o Problema do Caixeiro\\
+  Viajante Euclidiano: uma Análise Empírica}
+
+% TODO(autora): preencher nome, matrícula e e-mail
+\author{Luana Palhares\inst{1}}
+
+\address{Departamento de Ciência da Computação -- Universidade Federal de Minas Gerais
+  (UFMG)\\
+  Belo Horizonte -- MG -- Brasil
+  \email{luanapalhares@ufmg.br}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  This paper compares an exact Branch-and-Bound (B\&B) with a Held-Karp lower bound
+  against the Twice-around-the-tree and Christofides approximation algorithms on 15
+  Euclidean TSPLIB instances with 12 to 70 vertices. All subroutines are instrumented
+  for time and memory, empirical complexity curves are fitted by regression, five
+  warm-start strategies for the B\&B upper bound are compared by the size of the search
+  tree, and the solution quality of the approximations is related to geometric features
+  of the instances. The exact method solves every instance within 30 minutes but
+  collapses near 75 vertices; convex-hull insertion reduces the tree by 78\%; the
+  matching dominates the cost of Christofides.
+\end{abstract}
+
+\begin{resumo}
+  Este trabalho compara um Branch-and-Bound (B\&B) exato, com limite inferior de
+  Held-Karp, aos algoritmos aproximados Twice-around-the-tree e Christofides em 15
+  instâncias euclidianas da TSPLIB com 12 a 70 vértices. Todas as sub-rotinas são
+  instrumentadas em tempo e memória, curvas de complexidade empírica são ajustadas por
+  regressão, cinco estratégias de \emph{warm-start} do limite superior do B\&B são
+  comparadas pelo tamanho da árvore de busca e a qualidade das aproximações é
+  relacionada a características geométricas das instâncias. O método exato resolve todas
+  as instâncias em até 30 minutos, mas colapsa perto de 75 vértices; a inserção pelo
+  fecho convexo reduz a árvore em 78\%; o emparelhamento domina o custo do Christofides.
+\end{resumo}
+
+\input{sections/introduction}
+\input{sections/implementation}
+\input{sections/experiments}
+\input{sections/conclusions}
+
+\bibliographystyle{sbc}
+\bibliography{references}
+
+\end{document}

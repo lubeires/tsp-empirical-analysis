@@ -1,0 +1,214 @@
+\section{Implementação, Profiling e Auditoria}\label{sec:impl}
+
+A implementação é em Python~3.12, com NumPy para operações vetoriais e
+NetworkX~\cite{hagberg2008} só para o emparelhamento do Christofides. O código fica no
+pacote \texttt{tsp} (algoritmos), com os pacotes \texttt{experiments} (execução) e
+\texttt{analysis} (tabelas e figuras); 469 testes automatizados cobrem os três.
+
+\subsection{Representação das instâncias}
+
+Uma instância é um vetor de coordenadas $n \times 2$ em ponto flutuante. A partir dele
+calcula-se uma única vez a matriz de distâncias $n \times n$ de inteiros de 64 bits, com
+a regra da TSPLIB $d_{ij} = \lfloor \sqrt{(x_i-x_j)^2 + (y_i-y_j)^2} + 0{,}5 \rfloor$.
+Usar essa regra mantém válidos os ótimos publicados, que servem de conferência para as
+instâncias completas. A função \texttt{np.round} não serve aqui: ela arredonda
+$x{,}5$ para o par mais próximo e daria distâncias diferentes. Uma rota é uma lista de
+índices de vértices, e seu custo é calculado por indexação vetorial da matriz
+(\texttt{dist[t, np.roll(t, -1)]}). Com custos inteiros, comparações de custo são exatas,
+o que o B\&B aproveita na regra de poda (Seção~\ref{sec:bnb}).
+
+\subsection{Heurísticas e algoritmos aproximados}
+
+As cinco estratégias de rota inicial compartilham a mesma interface
+(coordenadas, matriz, \emph{profiler}) $\rightarrow$ rota, o que permite trocá-las no B\&B
+sem código especial.
+\begin{itemize}
+  \item \textbf{Trivial:} os vértices na ordem do arquivo; serve de linha de base.
+  \item \textbf{Vizinho mais próximo}~\cite{rosenkrantz1977}: a cada passo, o vértice
+    mais próximo ainda não visitado, escolhido por \texttt{argmin} sobre a linha da
+    matriz com os visitados mascarados; $O(n^2)$.
+  \item \textbf{Inserção pelo fecho convexo:} o fecho é calculado pela cadeia monótona de
+    Andrew~\cite{andrew1979}, em $O(n \log n)$, e os demais vértices entram por
+    \emph{inserção mais barata}. A cada passo, uma matriz
+    $|\text{fora}| \times |\text{rota}|$ com o acréscimo
+    $d_{ik} + d_{kj} - d_{ij}$ de inserir cada vértice $k$ em cada aresta $(i,j)$ é
+    montada de uma vez e minimizada com \texttt{argmin}: $O(n^3)$ operações no total, mas
+    sem laço Python interno.
+  \item \textbf{Twice-around-the-tree}: árvore geradora mínima (AGM) pelo algoritmo de
+    Prim~\cite{prim1957} e percurso em pré-ordem. Como o grafo é completo, o Prim usa
+    vetores de menor custo em vez de heap: $n$ iterações de $O(n)$ operações vetoriais,
+    $O(n^2)$ no total, contra $O(n^2 \log n)$ com heap. O percurso é iterativo, com pilha
+    explícita.
+  \item \textbf{Christofides}~\cite{christofides1976}: AGM, vértices de grau ímpar
+    $O$, emparelhamento perfeito de custo mínimo entre eles, circuito euleriano no
+    multigrafo resultante e atalhos sobre vértices repetidos. O emparelhamento usa
+    \texttt{networkx.min\_weight\_matching} (algoritmo de blossom de
+    Edmonds~\cite{edmonds1965}, $O(|O|^3)$) sobre um grafo completo com $|O|(|O|-1)/2$
+    arestas. O circuito euleriano é o de Hierholzer~\cite{hierholzer1873}, iterativo e
+    com um identificador por aresta: quando uma aresta está na AGM e também no
+    emparelhamento, as duas cópias precisam ser percorridas, e marcar pares de vértices
+    em vez de arestas perderia uma delas.
+\end{itemize}
+
+\subsection{Branch-and-Bound}\label{sec:bnb}
+
+\paragraph{Estratégia de busca.} A busca é em profundidade (DFS), recursiva, com o
+vértice 0 fixo como início, o que elimina as $n$ rotações equivalentes de cada rota. Os
+filhos de um nó são ordenados do vértice mais próximo ao mais distante do fim do caminho.
+A DFS foi preferida à \emph{best-first} por memória: a pilha de recursão tem profundidade
+no máximo $n$, e cada nível guarda um vetor de penalidades de tamanho $n$, logo $O(n^2)$
+no total. Uma \emph{best-first} precisaria manter a fronteira inteira, com um vetor desses
+por nó: na instância st70 o B\&B expandiu cerca de 29 mil nós, e na rd100-n75 mais de
+75 mil antes do prazo, numa máquina com 3~GB de memória. A DFS também aproveita o
+\emph{warm-start} desde o início, pois poda com o limite superior dado pela rota inicial.
+
+\paragraph{Limite inferior.} Para um caminho parcial $P$ que começa no vértice $f$ e
+termina em $\ell$, com conjunto $U$ de vértices não visitados, usa-se a relaxação
+lagrangiana de Held e Karp~\cite{held1970,held1971} adaptada a caminhos. Com penalidades
+$\pi_u$ por vértice e pesos $w_{ij} = d_{ij} + \pi_i + \pi_j$,
+\begin{equation}
+  LB(\pi) = c(P) + \mathrm{AGM}_w(U) + \min_{u \in U}(d_{\ell u} + \pi_u)
+          + \min_{u \in U}(d_{f u} + \pi_u) - 2\sum_{u \in U} \pi_u .
+  \label{eq:lb}
+\end{equation}
+O limite vale para qualquer $\pi$: em toda forma de completar a rota, cada vértice de $U$
+tem grau 2, então o custo com pesos $w$ é o custo real mais $2\sum\pi_u$, e esse custo é
+pelo menos a AGM de $U$ mais as duas arestas mais baratas que ligam as pontas do caminho a
+$U$. Com $\pi = 0$, (\ref{eq:lb}) é o limite 1-tree simples. As penalidades são ajustadas
+por subgradiente: $g_u = \text{grau}_u - 2$ na estrutura que realiza o mínimo, e
+\[
+  \pi \leftarrow \pi + \lambda \, \frac{\delta \cdot |LB^*|}{\|g\|^2}\, g ,
+\]
+um passo de Polyak~\cite{polyak1969} com alvo $(1+\delta)LB^*$, em que $LB^*$ é o melhor
+limite obtido até ali, $\delta = 0{,}15$ e $\lambda$ cai pela metade a cada 30
+iterações. A raiz faz 300 iterações com $\lambda = 2$; os demais nós fazem 10, com
+$\lambda = 0{,}05$, partindo das penalidades do pai. O subgradiente para assim que o
+nó já pode ser podado.
+
+\paragraph{Por que o passo não usa o limite superior.} O passo clássico de Held e Karp
+usa como alvo o limite superior atual. Aqui isso foi evitado de propósito. Assim, a
+sequência de penalidades em cada nó não depende da rota inicial, e um limite superior
+menor nunca expande mais nós: todo nó podado com um limite maior também é podado com um
+limite menor, e a ordem de visita é a mesma. Essa \emph{monotonicidade} é o que permite
+atribuir à rota inicial, e não a efeitos colaterais do limite, as diferenças medidas na
+análise de \emph{warm-start}. Ela é verificada nos dados: nenhuma violação nas
+$15 \times \binom{5}{2}$ comparações, e o limite da raiz é idêntico entre as cinco
+estratégias em todas as instâncias.
+
+\paragraph{Poda e prazo.} Como os custos são inteiros, um nó é podado quando
+$\lceil LB - \varepsilon \rceil \geq UB$, com $\varepsilon = 10^{-6}$ para absorver
+erros de ponto flutuante. O limite de 30 minutos é um prazo absoluto que inclui o tempo
+da heurística inicial e é conferido em cada nó e em cada iteração do subgradiente.
+Quando vence, uma exceção desfaz toda a recursão de uma vez e a execução termina com
+\emph{status} \texttt{NA}, guardando a melhor rota e os contadores parciais.
+
+\subsection{Instrumentação}
+
+Um objeto \texttt{Profiler} acumula, por sub-rotina, o número de chamadas e o tempo total
+medido com \texttt{time.perf\_counter}. As medições são feitas por um gerenciador de
+contexto (\texttt{with prof.timed("mst"):}) que se aninha: o tempo do Christofides inclui
+o da sua AGM, que também aparece separado. O custo de cada medição é de
+$\approx 1{,}05\,\mu$s, contra $0{,}19\,\mu$s de uma chamada isolada a
+\texttt{perf\_counter}. Esse custo importa no B\&B, que mede o limite inferior em cada
+nó. A memória é medida em execuções separadas com \texttt{tracemalloc}, que deixa o
+código de 2 a 5 vezes mais lento e distorceria os tempos. Cada sub-rotina registra o seu
+pico de alocação, que também é repassado à sub-rotina que a contém. O número de coletas
+do coletor de lixo é registrado em cada execução.
+
+\subsection{Auditoria do código gerado com IA}\label{sec:audit}
+
+O código foi escrito com o assistente Claude Code (Anthropic), num processo guiado por
+especificação. Primeiro foram escritos e aprovados pela autora uma constituição do
+projeto, uma especificação de requisitos, um plano técnico e uma lista de 24 tarefas.
+Cada tarefa foi apresentada antes de implementada, com as decisões em aberto; nada foi
+implementado sem aprovação. As 34 decisões tomadas estão registradas com justificativa no
+repositório, e o histórico completo de \emph{prompts} está anexado. A
+Tabela~\ref{tab:audit} lista os problemas do código inicial que foram encontrados por
+testes, \emph{profiling} ou inspeção dos dados, e como foram corrigidos.
+
+\begin{table}[htb]
+\centering
+\caption{Problemas encontrados no código inicial e correções.}
+\label{tab:audit}
+\footnotesize
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.3cm}
+                             >{\raggedright\arraybackslash}X
+                             >{\raggedright\arraybackslash}X}
+\toprule
+Problema & Como foi encontrado & Correção \\
+\midrule
+Limite 1-tree fraco no B\&B
+  & Medição: limite da raiz a 78--84\% do ótimo; lin105-n18 levava 8 min, e nenhuma
+    instância com $N \geq 24$ fechava em 10 min.
+  & Limite de Held-Karp (\ref{eq:lb}): raiz a 98--100\% do ótimo; as 12 sub-instâncias
+    passaram a fechar em até $\sim$30 s. \\
+Subgradiente estagnado
+  & Medição: com o passo encolhendo 10\% por iteração, 1000 iterações davam o mesmo
+    limite que 100.
+  & Passo de Polyak com alvo próprio; $\lambda$ dos nós escolhido no platô
+    0{,}02--0{,}05 medido em três instâncias. \\
+Passo dependente do limite superior
+  & Análise: o $\pi$ passaria a depender da rota inicial, e uma rota melhor poderia
+    expandir mais nós.
+  & Alvo sem o limite superior; monotonicidade coberta por teste e verificada nos dados. \\
+Prazo ultrapassado
+  & Teste: o prazo só era conferido por nó, e as 300 iterações da raiz passavam dele.
+  & Conferência do prazo também dentro do subgradiente. \\
+Custo da medição de tempo
+  & \emph{Profiling} do próprio \emph{profiler}: 2{,}1~$\mu$s por medição.
+  & Gerenciador como classe em vez de gerador, sem criar objetos a cada chamada:
+    1{,}05~$\mu$s. \\
+AGM da biblioteca SciPy
+  & Teste contra a SciPy, e medição feita a pedido da autora.
+  & A SciPy trata distância 0 como aresta ausente, o que daria um limite errado sem aviso,
+    e tem $\sim$140~$\mu$s fixos por chamada (2--5$\times$ mais lenta para $k \leq 20$).
+    Mantido o Prim próprio. \\
+Executor de experimentos
+  & Revisão da autora.
+  & Um processo por tarefa, criado com \texttt{spawn}; resultado por um \texttt{Pipe}
+    exclusivo lido antes do \texttt{join}; execução de aquecimento descartada; pico de
+    memória do processo filho. \\
+Ruído de medição
+  & Dados: dispersão de 30\% e efeito aparente do coletor de lixo até em algoritmos sem
+    nenhuma coleta.
+  & Laço interno com $\geq 20$~ms por medição; variantes com e sem coletor intercaladas.
+    O efeito aparente era variação de carga da máquina. \\
+Execuções sumindo da análise
+  & Inspeção dos dados: o pandas lia o \emph{status} \texttt{NA} como valor ausente, e as
+    5 execuções da instância de estresse desapareciam sem erro.
+  & Leitura com \texttt{keep\_default\_na=False}; teste de regressão. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Os dois primeiros itens foram os mais importantes. A versão inicial do B\&B, com o limite
+1-tree, era correta (testada contra força bruta), mas não fechava nenhuma instância com 24
+vértices ou mais em 10 minutos. O limite de Held-Karp não foi escolhido de início por simplicidade; o
+\emph{profiling} mostrou que o problema não era a velocidade de cada nó, mas o número de
+nós. Acelerar a AGM, que ocupa cerca de 75\% do tempo de cada limite, daria no máximo um
+ganho de 2 a 3 vezes; o limite mais forte reduziu a árvore em ordens de grandeza.
+
+\paragraph{Memória.} O enunciado pede as refatorações feitas para evitar estouro de
+memória. Nenhum estouro ocorreu, e seria desonesto inventar um. As escolhas que o
+previnem foram feitas no projeto: a DFS em vez de \emph{best-first}, o circuito euleriano
+e o percurso em pré-ordem iterativos (sem limite de recursão), e uma única matriz de
+distâncias compartilhada por todos os algoritmos. O \emph{profiling} de memória mostra
+onde estão os picos. O cálculo da matriz de distâncias aloca $\approx 5{,}4$ vezes o
+tamanho da matriz final (210~kB contra 39~kB no st70), por causa das matrizes temporárias
+de diferenças em ponto flutuante. No Christofides, o grafo do NetworkX ocupa 148~kB para
+montar e 174~kB no emparelhamento, contra 7,6~kB da AGM. O pico de memória residente dos processos
+ficou entre 47 e 53~MB em todas as execuções, inclusive as do B\&B, dominado pelo próprio
+interpretador e pelas bibliotecas.
+
+\paragraph{Sub-rotinas mais caras.} Os contadores por sub-rotina isolaram os gargalos
+de cada algoritmo. No Christofides, o emparelhamento ocupa 68\% do tempo na menor
+instância (12 vértices) e 93\% no st70; o resto se divide entre a AGM (de 23\% a 4\%) e a
+montagem do grafo do NetworkX (3--5\%). No B\&B, o cálculo do limite inferior responde
+por 98\% do tempo no st70: 482 mil chamadas, de $\approx 1{,}3$~ms cada. Os expoentes
+empíricos dessas sub-rotinas estão na Seção~\ref{sec:experiments}.
+
+\paragraph{Limitações.} Os parâmetros do subgradiente ($\delta$, $\lambda$, número de
+iterações) foram ajustados em instâncias do próprio conjunto de teste. O emparelhamento
+depende de uma implementação em Python puro do NetworkX, e o expoente medido para ele
+reflete essa implementação, não o melhor algoritmo conhecido. Os tempos do B\&B foram
+medidos com seis processos em paralelo (Seção~\ref{sec:setup}).

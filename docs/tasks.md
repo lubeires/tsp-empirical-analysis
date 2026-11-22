@@ -31,10 +31,10 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 - [x] **T18** `complexity.py`: curvas com R² e RMSE (RF7a). *Pronto quando:* tabela e figura geradas.
 - [x] **T19** `warmstart.py` (RF7b), depende do T15. *Pronto quando:* tabela e figura geradas.
 - [x] **T20** `sensitivity.py` (RF7c). *Pronto quando:* correlações e modelos gerados.
-- [ ] **T21** Um único comando que refaz todas as tabelas e figuras (RF8). *Pronto quando:* critério de aceitação atendido.
+- [x] **T21** Um único comando que refaz todas as tabelas e figuras (RF8). *Pronto quando:* critério de aceitação atendido.
 
 ## Fase 5: Relatório e entrega (23–24/11)
-- [ ] **T22** Rascunho da Introdução e de Implementação/Auditoria (pode começar durante o T15). *Pronto quando:* texto no Overleaf.
+- [x] **T22** Rascunho da Introdução e de Implementação/Auditoria (pode começar durante o T15). *Pronto quando:* PDF compilando sem erros, com as seções 1, 2 e a configuração experimental.
 - [ ] **T23** Resultados e Conclusões. *Pronto quando:* artigo completo.
 - [ ] **T24** README de reprodução, exportar prompts, checar a especificação ponto a ponto. *Pronto quando:* tudo pronto para subir no GitHub.
 

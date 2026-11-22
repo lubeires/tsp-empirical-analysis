@@ -1,0 +1,55 @@
+\section{Introdução}\label{sec:intro}
+
+Dado um conjunto de $n$ cidades e as distâncias entre cada par, o Problema do Caixeiro
+Viajante (PCV) pede o ciclo de menor custo que visita todas as cidades exatamente uma vez.
+Mesmo restrito a pontos no plano com distância euclidiana, o problema continua
+NP-difícil~\cite{papadimitriou1977}, e os métodos práticos dividem-se em duas famílias:
+algoritmos \emph{exatos}, que garantem o ótimo ao custo de tempo exponencial no pior caso,
+e algoritmos \emph{aproximados}, polinomiais e com garantia sobre a qualidade da
+solução~\cite{applegate2006}.
+
+Este trabalho implementa e compara três algoritmos: um \emph{Branch-and-Bound} (B\&B)
+exato e os aproximados \emph{Twice-around-the-tree} (fator 2) e
+Christofides~\cite{christofides1976} (fator 1{,}5). A análise teórica de pior caso,
+porém, não diz como esses algoritmos se comportam em instâncias reais de tamanho moderado
+nem quanto custam as constantes escondidas na notação assintótica. Por isso o foco é
+\emph{empírico}: cada sub-rotina é instrumentada em tempo e memória, e os experimentos
+respondem a três perguntas.
+\begin{enumerate}
+  \item \textbf{Complexidade empírica.} As curvas de tempo e memória medidas seguem os
+    modelos assintóticos esperados? Gargalos de implementação, como cópias de matrizes ou o
+    coletor de lixo, distorcem essas curvas?
+  \item \textbf{Impacto do \emph{warm-start}.} O B\&B começa com um limite superior dado
+    por uma rota inicial. Entre cinco estratégias (rota trivial, vizinho mais próximo,
+    inserção pelo fecho convexo, Twice-around e Christofides), o tempo gasto na heurística
+    compensa a redução da árvore de busca? Onde o método exato colapsa?
+  \item \textbf{Sensibilidade.} Que características geométricas da instância
+    (distribuição espacial, agrupamento, forma do fecho convexo) pioram ou facilitam a
+    qualidade das soluções aproximadas?
+\end{enumerate}
+
+Os experimentos usam 15 instâncias euclidianas (\texttt{EUC\_2D}) com 12 a 70 vértices:
+as três instâncias completas da TSPLIB~\cite{reinelt1991} nessa faixa e 12
+sub-instâncias amostradas de seis instâncias maiores com geometrias diferentes, mais uma
+instância de estresse com 75 vértices para localizar o ponto de colapso. Em resumo, os
+resultados mostram que:
+\begin{itemize}
+  \item o B\&B com limite de Held-Karp~\cite{held1970,held1971} prova o ótimo de todas
+    as 15 instâncias dentro do limite de 30 minutos, mas nenhuma das cinco estratégias
+    fecha a instância com 75 vértices;
+  \item a inserção pelo fecho convexo reduz o número de nós expandidos em 78\% (média
+    geométrica) em relação à rota trivial; as outras estratégias ajudam pouco, porque o
+    primeiro ramo da busca já reproduz a rota do vizinho mais próximo;
+  \item o emparelhamento perfeito de custo mínimo responde por até 93\% do tempo do
+    Christofides, com crescimento empírico próximo de $n^3$;
+  \item a entropia espacial e o índice de agrupamento de
+    Clark-Evans~\cite{clark1954} pioram a qualidade dos algoritmos baseados em árvore
+    geradora mínima, mas nenhum modelo único generaliza entre os algoritmos.
+\end{itemize}
+
+O texto está organizado da seguinte forma. A Seção~\ref{sec:impl} descreve as
+estruturas de dados, os algoritmos, a instrumentação e a auditoria do código, gerado com
+apoio de uma ferramenta de IA. A Seção~\ref{sec:experiments} apresenta a configuração
+experimental e os resultados das três análises, e a Seção~\ref{sec:conclusions} resume
+as conclusões. Código, dados brutos, figuras e o histórico de \emph{prompts} estão no
+repositório do trabalho.

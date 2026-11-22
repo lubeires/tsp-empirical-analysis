@@ -79,7 +79,7 @@ prompts/            transcrições exportadas
 pytest cobrindo o P3 da constituição; força bruta para N ≤ 9 com `itertools.permutations`.
 
 ## 9. Relatório e prompts (D15, D16)
-Artigo no Overleaf com o modelo SBC; `.tex` final copiado para `report/`. Transcrições do Claude Code exportadas para `prompts/` no fim.
+Artigo em `report/` com o modelo SBC, compilado localmente (D15). Transcrições do Claude Code exportadas para `prompts/` no fim.
 
 ## 10. Cronograma (D17)
 
