@@ -1,0 +1,41 @@
+== Vizinho mais próximo: R² na amostra = 0.81; R² fora da amostra (deixa uma de fora) = -1.28
+|--- hull_ratio <= 0.388
+|   |--- hull_ratio <= 0.287
+|   |   |--- value: [15.012]
+|   |--- hull_ratio >  0.287
+|   |   |--- value: [32.274]
+|--- hull_ratio >  0.388
+|   |--- value: [2.361]
+
+== Fecho + inserção: R² na amostra = 0.70; R² fora da amostra (deixa uma de fora) = 0.04
+|--- hull_ratio <= 0.223
+|   |--- value: [5.024]
+|--- hull_ratio >  0.223
+|   |--- n <= 23.000
+|   |   |--- value: [0.212]
+|   |--- n >  23.000
+|   |   |--- value: [1.897]
+
+== Twice-around: R² na amostra = 0.86; R² fora da amostra (deixa uma de fora) = -0.20
+|--- n <= 31.500
+|   |--- aspect_ratio <= 0.555
+|   |   |--- value: [7.295]
+|   |--- aspect_ratio >  0.555
+|   |   |--- value: [22.254]
+|--- n >  31.500
+|   |--- clark_evans <= 1.189
+|   |   |--- value: [30.984]
+|   |--- clark_evans >  1.189
+|   |   |--- value: [39.786]
+
+== Christofides: R² na amostra = 0.83; R² fora da amostra (deixa uma de fora) = 0.19
+|--- n <= 34.500
+|   |--- spatial_entropy <= 0.745
+|   |   |--- value: [3.537]
+|   |--- spatial_entropy >  0.745
+|   |   |--- value: [6.553]
+|--- n >  34.500
+|   |--- spatial_entropy <= 0.840
+|   |   |--- value: [8.857]
+|   |--- spatial_entropy >  0.840
+|   |   |--- value: [12.054]

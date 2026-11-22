@@ -284,3 +284,70 @@ def plot_collapse(test, stress, collapse, out_dir: Path, limit: float) -> None:
                  loc="left")
     _legend_below(ax)
     _save(fig, out_dir, "collapse")
+
+
+# ---------------------------------------------------------------------------
+# Figuras da T20 (sensibilidade)
+# ---------------------------------------------------------------------------
+
+FEATURE_LABELS = {
+    "n": "N", "aspect_ratio": "Razão de aspecto", "hull_ratio": "Proporção no fecho",
+    "spatial_entropy": "Entropia espacial", "clark_evans": "Clark-Evans",
+    "mst_max_degree": "Grau máx. na MST", "mst_leaf_ratio": "Folhas na MST",
+    "nn_cv": "CV do vizinho mais próximo", "odd_ratio": "Ímpares na MST",
+}
+# Divergente azul <-> vermelho com cinza neutro no zero (paleta de referência):
+# vermelho = a característica PIORA o gap (ρ > 0); azul = FACILITA (ρ < 0)
+DIVERGING = ["#1c5cab", "#86b6ef", "#f0efec", "#f0a3a2", "#c03332"]
+
+
+def plot_sensitivity_heatmap(corr, algorithms, features, out_dir: Path) -> None:
+    from matplotlib.colors import LinearSegmentedColormap
+    cmap = LinearSegmentedColormap.from_list("div", DIVERGING)
+    wide = corr.pivot(index="feature", columns="algorithm", values="rho_partial_n")
+    pvals = corr.pivot(index="feature", columns="algorithm", values="p_partial_n")
+    wide, pvals = wide.loc[features, algorithms], pvals.loc[features, algorithms]
+    fig, ax = plt.subplots(figsize=(6.3, 4.0))
+    im = ax.imshow(wide.to_numpy(), cmap=cmap, vmin=-1, vmax=1, aspect="auto")
+    for i in range(len(features)):
+        for j in range(len(algorithms)):
+            v, p = wide.iat[i, j], pvals.iat[i, j]
+            mark = "*" if p < 0.05 else ""
+            ax.text(j, i, f"{v:+.2f}{mark}", ha="center", va="center", fontsize=8,
+                    color=SURFACE if abs(v) > 0.6 else TEXT)
+    ax.set_xticks(range(len(algorithms)))
+    ax.set_xticklabels([LABELS[a].replace(" + ", " +\n").replace("Vizinho mais ", "Vizinho mais\n")
+                        for a in algorithms])
+    ax.set_yticks(range(len(features)))
+    ax.set_yticklabels([FEATURE_LABELS[f] for f in features])
+    ax.grid(False)
+    ax.tick_params(length=0)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    cbar = fig.colorbar(im, ax=ax, fraction=0.04, pad=0.02)
+    cbar.set_label("ρ parcial (controlando N)")
+    cbar.outline.set_visible(False)
+    ax.set_title("Característica x gap (vermelho = piora, azul = facilita; * = p < 0,05)",
+                 loc="left")
+    _save(fig, out_dir, "sensitivity_heatmap")
+
+
+def plot_regression_coefficients(reg, info, out_dir: Path) -> None:
+    reg = reg.iloc[::-1]  # primeira característica no topo
+    y = np.arange(len(reg))
+    fig, ax = plt.subplots(figsize=(6.3, 3.4))
+    ax.axvline(0, color=LIMIT_LINE, linewidth=1, linestyle="--")
+    for yi, (_, r) in zip(y, reg.iterrows()):
+        color = TEXT if r.ci_excludes_zero else MUTED
+        ax.plot([r.ci_low, r.ci_high], [yi, yi], color=color, linewidth=1.5)
+        ax.plot(r.beta, yi, "o", markersize=6, markeredgecolor=color, markeredgewidth=1.2,
+                markerfacecolor=color if r.ci_excludes_zero else SURFACE)
+    ax.set_yticks(y)
+    ax.set_yticklabels([FEATURE_LABELS[f] for f in reg.feature])
+    ax.set_xlabel("β padronizado (gap em desvios-padrão por 1 desvio-padrão da característica)")
+    ax.grid(axis="y", visible=False)
+    ax.set_title(f"Peso das características no gap (R² = {info['r2_in_sample']:.2f} na amostra, "
+                 f"{info['r2_loo_instance']:.2f} fora)", loc="left")
+    ax.text(1.0, -0.25, "cheio = IC 95% não contém 0; vazado = contém 0",
+            transform=ax.transAxes, ha="right", fontsize=8, color=MUTED)
+    _save(fig, out_dir, "sensitivity_coefficients")

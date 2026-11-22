@@ -29,7 +29,7 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 
 ## Fase 4: Análises (22/11)
 - [x] **T18** `complexity.py`: curvas com R² e RMSE (RF7a). *Pronto quando:* tabela e figura geradas.
-- [ ] **T19** `warmstart.py` (RF7b), depende do T15. *Pronto quando:* tabela e figura geradas.
+- [x] **T19** `warmstart.py` (RF7b), depende do T15. *Pronto quando:* tabela e figura geradas.
 - [ ] **T20** `sensitivity.py` (RF7c). *Pronto quando:* correlações e modelos gerados.
 - [ ] **T21** Um único comando que refaz todas as tabelas e figuras (RF8). *Pronto quando:* critério de aceitação atendido.
 

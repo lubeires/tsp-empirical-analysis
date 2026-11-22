@@ -1,0 +1,8 @@
+{
+  "r2_in_sample":0.4443392921,
+  "r2_loo_instance":-0.2671706857,
+  "rows":60,
+  "dropped_by_vif":[
+    "mst_leaf_ratio"
+  ]
+}
