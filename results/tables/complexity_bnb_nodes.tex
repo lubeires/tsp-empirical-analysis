@@ -2,15 +2,17 @@
 \centering
 \caption{Crescimento exponencial dos nós expandidos do B\&B: nós $\approx a\cdot b^n$.}
 \label{tab:complexity-nodes}
-\begin{tabular}{llll}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrr}
 \toprule
 Rota inicial & $a$ & $b$ & $R^2$ (log) \\
 \midrule
-trivial & 13.054 & 1.114 & 0.873 \\
-nn & 10.396 & 1.119 & 0.845 \\
-hull & 0.675 & 1.167 & 0.789 \\
-twice\_around & 10.678 & 1.118 & 0.871 \\
-christofides & 8.484 & 1.120 & 0.903 \\
+Trivial & 13{,}49 & 1{,}112 & 0{,}87 \\
+Vizinho mais próximo & 10{,}75 & 1{,}118 & 0{,}85 \\
+Fecho + inserção & 0{,}75 & 1{,}165 & 0{,}78 \\
+Twice-around & 11{,}11 & 1{,}116 & 0{,}87 \\
+Christofides & 8{,}85 & 1{,}118 & 0{,}90 \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -4,7 +4,8 @@ Uso (na raiz do projeto):
     .venv/bin/python -m analysis           # completo (bootstrap da complexidade: minutos)
     .venv/bin/python -m analysis --quick   # reaproveita os intervalos do bootstrap
 
-Etapas: características → complexidade → warm-start e colapso → sensibilidade.
+Etapas: características → complexidade → warm-start e colapso → sensibilidade →
+caso adversarial do limite inferior.
 No fim, confere se todos os arquivos esperados foram (re)gerados nesta execução.
 """
 
@@ -13,7 +14,7 @@ import sys
 import time
 from pathlib import Path
 
-from analysis import complexity, sensitivity, warmstart
+from analysis import adversarial, complexity, sensitivity, warmstart
 from tsp import features
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,14 +23,16 @@ RESULTS = ROOT / "results"
 FIGURES = ["complexity_time_algorithms", "complexity_time_subroutines", "complexity_memory",
            "complexity_bnb_nodes", "warmstart_nodes_ratio", "warmstart_gap_vs_nodes",
            "warmstart_find_vs_prove", "collapse", "sensitivity_heatmap",
-           "sensitivity_coefficients"]
+           "sensitivity_coefficients", "adversarial_structure"]
 TABLES = ["complexity_time.csv", "complexity_time.tex", "complexity_memory.csv",
           "complexity_memory.tex", "complexity_bnb_nodes.csv", "complexity_bnb_nodes.tex",
           "warmstart_per_instance.csv", "warmstart_summary.csv", "warmstart_summary.tex",
           "warmstart_checks.json", "collapse.csv", "collapse.tex",
           "sensitivity_spearman.csv", "sensitivity_spearman.tex", "sensitivity_regression.csv",
           "sensitivity_regression.tex", "sensitivity_regression_info.json",
-          "sensitivity_trees.csv", "sensitivity_trees.txt", "sensitivity_adversarial.csv"]
+          "sensitivity_trees.csv", "sensitivity_trees.txt", "sensitivity_adversarial.csv",
+          "adversarial_root.csv", "adversarial_root.tex", "bound_fix.csv",
+          "bound_fix_summary.json"]
 
 
 def expected_outputs() -> list[Path]:
@@ -51,6 +54,7 @@ def main(argv=None) -> None:
         ("complexidade", lambda: complexity.main(["--quick"] if args.quick else [])),
         ("warm-start e colapso", warmstart.main),
         ("sensibilidade", sensitivity.main),
+        ("caso adversarial", adversarial.main),
     ]
     for name, step in steps:
         t0 = time.perf_counter()

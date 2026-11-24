@@ -2,18 +2,20 @@
 \centering
 \caption{Correlação de Spearman parcial (controlando N) entre característica e gap.}
 \label{tab:sensitivity-spearman}
-\begin{tabular}{lllll}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrr}
 \toprule
 Característica & Vizinho mais próximo & Fecho + inserção & Twice-around & Christofides \\
 \midrule
-aspect\_ratio & -0.088 & -0.048 & 0.461 & 0.282 \\
-hull\_ratio & 0.162 & 0.475 & 0.061 & 0.048 \\
-spatial\_entropy & -0.231 & -0.027 & 0.561 & 0.613 \\
-clark\_evans & 0.128 & 0.241 & 0.377 & 0.533 \\
-mst\_max\_degree & -0.060 & -0.389 & -0.010 & 0.491 \\
-mst\_leaf\_ratio & -0.466 & -0.120 & 0.306 & 0.476 \\
-nn\_cv & -0.019 & 0.041 & -0.413 & -0.190 \\
-odd\_ratio & -0.449 & -0.011 & 0.218 & 0.321 \\
+Razão de aspecto & $-$0{,}09 & $-$0{,}05 & 0{,}46 & 0{,}28 \\
+Proporção no fecho & 0{,}16 & 0{,}47 & 0{,}06 & 0{,}05 \\
+Entropia espacial & $-$0{,}23 & $-$0{,}03 & 0{,}56 & 0{,}61 \\
+Clark-Evans & 0{,}13 & 0{,}24 & 0{,}38 & 0{,}53 \\
+Grau máx. na MST & $-$0{,}06 & $-$0{,}39 & $-$0{,}01 & 0{,}49 \\
+Folhas na MST & $-$0{,}47 & $-$0{,}12 & 0{,}31 & 0{,}48 \\
+CV do vizinho mais próximo & $-$0{,}02 & 0{,}04 & $-$0{,}41 & $-$0{,}19 \\
+Ímpares na MST & $-$0{,}45 & $-$0{,}01 & 0{,}22 & 0{,}32 \\
 \bottomrule
 \end{tabular}
 \end{table}

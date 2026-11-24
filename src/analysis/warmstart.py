@@ -23,7 +23,7 @@ import pandas as pd
 from scipy import stats
 
 from analysis import plotting
-from analysis.complexity import write_latex
+from analysis.complexity import p_value, write_latex
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results"
@@ -206,18 +206,22 @@ def main() -> None:
     write_latex(summary, tables / "warmstart_summary.tex",
                 "Efeito da rota inicial no B\\&B (15 instâncias; razões em relação à rota trivial).",
                 "tab:warmstart",
-                {"strategy": "Rota inicial", "initial_gap_pct_median": "Gap inicial (\\%)",
-                 "nodes_ratio_geomean": "Nós (média geom.)",
-                 "fewer_nodes_than_trivial": "Vitórias", "time_ratio_median": "Tempo (mediana)",
-                 "heuristic_share_max_pct": "Heurística (\\% máx.)",
-                 "wilcoxon_p_holm": "$p$ (Holm)"})
+                {"strategy": "Rota inicial", "initial_gap_pct_median": r"Gap\\inicial (\%)",
+                 "nodes_ratio_geomean": r"Nós (média\\geométrica)",
+                 "fewer_nodes_than_trivial": "Vitórias", "time_ratio_median": r"Tempo\\(mediana)",
+                 "heuristic_share_max_pct": r"Heurística\\(\% máx.)",
+                 "wilcoxon_p_holm": "$p$ (Holm)"},
+                {"initial_gap_pct_median": 1, "heuristic_share_max_pct": 1,
+                 "wilcoxon_p_holm": p_value})
     write_latex(collapse, tables / "collapse.tex",
                 "Ponto de colapso: ajuste $\\log t = \\alpha + \\beta n$ nas 15 instâncias e "
                 "resultado observado na instância de estresse rd100-n75.",
                 "tab:collapse",
                 {"strategy": "Rota inicial", "growth_per_vertex": "$e^{\\beta}$",
-                 "n_collapse": "N previsto (30 min)", "predicted_time_n75": "Previsto N=75 (s)",
-                 "n75_status": "Obs. N=75", "n75_time": "Tempo obs. (s)"})
+                 "n_collapse": r"N previsto\\(30 min)", "predicted_time_n75": r"Previsto\\N = 75 (s)",
+                 "n75_status": r"Observado\\N = 75", "n75_time": r"Tempo\\obs. (s)"},
+                {"growth_per_vertex": 3, "n_collapse": 1, "predicted_time_n75": 0,
+                 "n75_time": 0})
 
     plotting.plot_nodes_ratio(test, figures)
     plotting.plot_gap_vs_nodes(test, figures)

@@ -353,3 +353,52 @@ def plot_regression_coefficients(reg, info, out_dir: Path) -> None:
     ax.text(1.0, -0.25, "cheio = IC 95% não contém 0; vazado = contém 0",
             transform=ax.transAxes, ha="right", fontsize=8, color=MUTED)
     _save(fig, out_dir, "sensitivity_coefficients")
+
+
+def plot_root_structure(panels: list[dict], out_dir: Path) -> None:
+    """Estrutura do Held-Karp na raiz sobre a rota ótima (T23, caso adversarial).
+
+    Cinza claro: rota ótima. Azul: aresta da estrutura que está na rota. Laranja
+    (mais grossa): aresta da estrutura FORA da rota. Vértices de grau ≠ 2 marcados.
+    """
+    from matplotlib.lines import Line2D
+    fig, axes = plt.subplots(1, len(panels), figsize=(6.3, 3.4))
+    for ax, p in zip(np.atleast_1d(axes), panels):
+        xy, tour = p["coords"], p["tour"]
+        opt = {frozenset((tour[i], tour[(i + 1) % len(tour)])) for i in range(len(tour))}
+        cyc = tour + [tour[0]]
+        ax.plot(xy[cyc, 0], xy[cyc, 1], color=GRID, linewidth=4, solid_capstyle="round",
+                zorder=1)
+        for u, v in p["structure"]["edges"]:
+            inside = frozenset((u, v)) in opt
+            ax.plot(xy[[u, v], 0], xy[[u, v], 1], zorder=2 if inside else 3,
+                    color=PALETTE[0] if inside else PALETTE[1],
+                    linewidth=1.0 if inside else 2.0)
+        deg = p["structure"]["degree"]
+        normal = deg == 2
+        ax.plot(xy[normal, 0], xy[normal, 1], "o", markersize=3, color=MUTED, zorder=4)
+        hi, lo = deg > 2, deg < 2
+        ax.plot(xy[hi, 0], xy[hi, 1], "s", markersize=7, color=PALETTE[1],
+                markeredgecolor=SURFACE, markeredgewidth=1.0, zorder=5)
+        ax.plot(xy[lo, 0], xy[lo, 1], "^", markersize=7, markerfacecolor=SURFACE,
+                markeredgecolor=TEXT, markeredgewidth=1.2, zorder=5)
+        ax.set_aspect("equal")
+        ax.set_anchor("N")  # painéis alinhados pelo topo: os títulos ficam na mesma altura
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.grid(False)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        gap = max(p["root_gap_pct"], 0.0)  # evita "-0,00%" por arredondamento
+        ax.set_title(f"{p['name']}\ngap da raiz: {gap:.2f}%".replace(".", ","), loc="left")
+    handles = [
+        Line2D([], [], color=GRID, linewidth=4, label="rota ótima"),
+        Line2D([], [], color=PALETTE[0], linewidth=1.0, label="estrutura, aresta da rota"),
+        Line2D([], [], color=PALETTE[1], linewidth=2.0, label="estrutura, aresta fora da rota"),
+        Line2D([], [], linestyle="", marker="s", markersize=7, color=PALETTE[1], label="grau > 2"),
+        Line2D([], [], linestyle="", marker="^", markersize=7, markerfacecolor=SURFACE,
+               markeredgecolor=TEXT, label="grau 1"),
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=3, frameon=False,
+               bbox_to_anchor=(0.5, -0.08))
+    _save(fig, out_dir, "adversarial_structure")

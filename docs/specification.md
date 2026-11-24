@@ -25,9 +25,9 @@ Nós expandidos, nós podados, profundidade máxima, número de melhorias do lim
 
 | Algoritmo | Execuções |
 |---|---|
-| B&B | 15 instâncias × 5 estratégias de limite inicial (1 execução cada) |
-| Twice-around-the-tree e Christofides | 15 instâncias × 5 repetições |
-| Heurísticas | 15 instâncias × 5 repetições |
+| B&B | 15 instâncias × 5 estratégias de limite inicial (1 execução cada), mais a instância de estresse rd100-n75 só para o ponto de colapso (D30) |
+| Twice-around-the-tree e Christofides | 15 instâncias × 30 repetições × coletor de lixo ligado e desligado (D26, substitui as 5 repetições da D13) |
+| Heurísticas | idem |
 
 - Limite de 30 min por execução, incluindo a heurística inicial; quem estoura fica `NA`.
 - A execução pode ser retomada de onde parou e roda em paralelo.

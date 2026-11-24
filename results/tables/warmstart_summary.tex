@@ -2,15 +2,17 @@
 \centering
 \caption{Efeito da rota inicial no B\&B (15 instâncias; razões em relação à rota trivial).}
 \label{tab:warmstart}
-\begin{tabular}{lllllll}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrr}
 \toprule
-Rota inicial & Gap inicial (\%) & Nós (média geom.) & Vitórias & Tempo (mediana) & Heurística (\% máx.) & $p$ (Holm) \\
+Rota inicial & \begin{tabular}[b]{@{}c@{}}Gap\\inicial (\%)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Nós (média\\geométrica)\end{tabular} & Vitórias & \begin{tabular}[b]{@{}c@{}}Tempo\\(mediana)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Heurística\\(\% máx.)\end{tabular} & $p$ (Holm) \\
 \midrule
-trivial & 68.232 & 1.000 & 0 & 1.000 & 0.009 & -- \\
-nn & 17.269 & 0.919 & 14 & 0.988 & 0.100 & 0.011 \\
-hull & 0.922 & 0.222 & 15 & 0.763 & 11.920 & 0.000 \\
-twice\_around & 25.809 & 0.920 & 5 & 1.019 & 1.238 & 0.043 \\
-christofides & 6.287 & 0.769 & 11 & 0.928 & 2.612 & 0.010 \\
+Trivial & 68{,}2 & 1{,}00 & 0 & 1{,}00 & 0{,}1 & -- \\
+Vizinho mais próximo & 17{,}3 & 0{,}92 & 14 & 0{,}98 & 0{,}3 & 0{,}012 \\
+Fecho + inserção & 0{,}9 & 0{,}23 & 15 & 0{,}60 & 11{,}4 & 0{,}003 \\
+Twice-around & 25{,}8 & 0{,}92 & 5 & 1{,}00 & 2{,}4 & 0{,}043 \\
+Christofides & 6{,}3 & 0{,}77 & 11 & 0{,}99 & 10{,}0 & 0{,}010 \\
 \bottomrule
 \end{tabular}
 \end{table}

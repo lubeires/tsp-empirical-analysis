@@ -1,0 +1,15 @@
+{
+  "pairs": 80,
+  "both_closed": 75,
+  "same_cost_when_closed": true,
+  "nodes_ratio_median": 1.0,
+  "nodes_ratio_geomean": 1.010274960502755,
+  "fewer_nodes": 35,
+  "more_nodes": 23,
+  "time_ratio_median": 0.9224923480974474,
+  "root_bound_never_lower": false,
+  "status_v2": {
+    "NA": 5,
+    "ok": 75
+  }
+}

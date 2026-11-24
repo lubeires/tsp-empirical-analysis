@@ -224,28 +224,80 @@ def _summary(df: pd.DataFrame) -> pd.DataFrame:
     for name, g in df.groupby("series", sort=False):
         best = g[g.best].iloc[0]
         power = g[g.model == "a*n^b"]
-        model = "constante (sem tendência)" if best.r2 < plotting.NO_TREND_R2 else best.model
+        no_trend = best.r2 < plotting.NO_TREND_R2
+        model = "sem tendência" if no_trend else best.model
+        # Sem tendência, o expoente livre não tem significado (ex.: b = 4,97 com IC
+        # [0,10; 5,00] na rota trivial): a tabela mostra travessão
         row = {"series": name, "theory": best.theory, "best_model": model,
                "r2": best.r2, "rmse_rel_pct": best.rmse_rel_pct,
-               "b": power.b.iloc[0] if len(power) else math.nan}
+               "b": power.b.iloc[0] if len(power) and not no_trend else math.nan}
         if "b_ci_low" in g:
-            row["b_ci"] = (f"[{power.b_ci_low.iloc[0]:.2f}, {power.b_ci_high.iloc[0]:.2f}]"
-                           if len(power) else "")
+            row["b_ci"] = ("--" if no_trend or not len(power) else
+                           f"[{_number(power.b_ci_low.iloc[0], 2)}; "
+                           f"{_number(power.b_ci_high.iloc[0], 2)}]")
         rows.append(row)
     return pd.DataFrame(rows)
 
 
-def write_latex(df: pd.DataFrame, path: Path, caption: str, label: str, headers: dict) -> None:
-    """Tabela LaTeX simples (booktabs), sem depender do jinja2."""
-    def fmt(v):
-        if isinstance(v, float):
-            return "--" if math.isnan(v) else f"{v:.3f}" if abs(v) < 100 else f"{v:.1f}"
-        return str(v).replace("_", r"\_").replace("^", r"\^{}").replace("|", r"$|$")
+def _number(v: float, decimals: int) -> str:
+    """Número com vírgula decimal (artigo em português); NaN vira travessão."""
+    if math.isnan(v):
+        return "--"
+    if round(v, decimals) == 0:
+        v = 0.0  # evita "-0,000"
+    return f"{v:.{decimals}f}".replace("-", "$-$").replace(".", "{,}")
+
+
+def p_value(v: float) -> str:
+    """p-valor com 3 casas; abaixo de 0,001 escreve só '< 0,001'."""
+    return "--" if math.isnan(v) else "$<$0{,}001" if v < 0.001 else _number(v, 3)
+
+
+def _text(v) -> str:
+    """Rótulo legível para nomes do código; notação assintótica em modo matemático."""
+    v = str(v)
+    if v.startswith("O(") or v in MODELS:  # antes dos rótulos: o modelo "n" não é a feature N
+        return "$" + v.replace(" log ", r"\log ") + "$"
+    v = {**plotting.LABELS, **plotting.FEATURE_LABELS}.get(v, v)
+    return v.replace("&", r"\&").replace("_", r"\_").replace("%", r"\%")
+
+
+def _header(h: str) -> str:
+    r"""Cabeçalho com quebra de linha (\\) vira uma pilha centralizada, sem pacotes extras."""
+    return rf"\begin{{tabular}}[b]{{@{{}}c@{{}}}}{h}\end{{tabular}}" if r"\\" in h else h
+
+
+def write_latex(df: pd.DataFrame, path: Path, caption: str, label: str, headers: dict,
+                formats: dict | None = None) -> None:
+    """Tabela LaTeX (booktabs), sem depender do jinja2.
+
+    `formats`: por coluna, número de casas decimais (padrão 2) ou função valor -> texto.
+    Textos passam por `_text` (rótulos das figuras, notação matemática).
+    """
+    formats = formats or {}
+
+    def cell(col, v):
+        fmt = formats.get(col, 2)
+        if callable(fmt):
+            return fmt(v)
+        if isinstance(v, (bool, np.bool_)):
+            return "sim" if v else "não"
+        if isinstance(v, (int, np.integer)):
+            return str(v)
+        if isinstance(v, (float, np.floating)):
+            return _number(float(v), fmt)
+        return _text(v)
+
     cols = list(headers)
-    lines = [r"\begin{table}[htb]", r"\centering", rf"\caption{{{caption}}}", rf"\label{{{label}}}",
-             r"\begin{tabular}{" + "l" * len(cols) + "}", r"\toprule",
-             " & ".join(headers[c] for c in cols) + r" \\", r"\midrule"]
-    lines += [" & ".join(fmt(row.get(c, math.nan)) for c in cols) + r" \\" for _, row in df.iterrows()]
+    numeric = [pd.api.types.is_numeric_dtype(df[c]) and not pd.api.types.is_bool_dtype(df[c])
+               if c in df else False for c in cols]
+    align = "".join("r" if num else "l" for num in numeric)
+    lines = [r"\begin{table}[htb]", r"\centering", rf"\caption{{{caption}}}",
+             rf"\label{{{label}}}", r"\small", r"\setlength{\tabcolsep}{4pt}",
+             r"\begin{tabular}{" + align + "}", r"\toprule",
+             " & ".join(_header(headers[c]) for c in cols) + r" \\", r"\midrule"]
+    lines += [" & ".join(cell(c, row.get(c, math.nan)) for c in cols) + r" \\"
+              for _, row in df.iterrows()]
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
     path.write_text("\n".join(lines) + "\n")
 
@@ -284,18 +336,21 @@ def main(argv=None) -> None:
     memory_fits.to_csv(tables / "complexity_memory.csv", index=False)
     nodes_fits.to_csv(tables / "complexity_bnb_nodes.csv", index=False)
 
-    headers = {"series": "Série", "theory": "Teoria", "best_model": "Melhor modelo",
-               "r2": "$R^2$", "rmse_rel_pct": "RMSE rel. (\\%)", "b": "$b$ livre"}
+    headers = {"series": "Série", "theory": "Teoria", "best_model": r"Melhor\\modelo",
+               "r2": "$R^2$", "rmse_rel_pct": r"RMSE\\rel. (\%)", "b": r"$b$\\livre"}
     write_latex(_summary(time_fits), tables / "complexity_time.tex",
-                "Ajuste de complexidade do tempo (mediana de 30 repetições).",
-                "tab:complexity-time", {**headers, "b_ci": "IC 95\\% de $b$"})
+                "Ajuste de complexidade do tempo (mediana de 30 repetições): melhor modelo "
+                "de forma fixa e expoente $b$ do modelo livre $a\\,n^b + c$.",
+                "tab:complexity-time", {**headers, "b_ci": r"IC 95\%\\de $b$"},
+                {"rmse_rel_pct": 1})
     write_latex(_summary(memory_fits), tables / "complexity_memory.tex",
                 "Ajuste de complexidade do pico de memória por sub-rotina.",
-                "tab:complexity-memory", headers)
+                "tab:complexity-memory", headers, {"rmse_rel_pct": 1})
     write_latex(nodes_fits, tables / "complexity_bnb_nodes.tex",
                 "Crescimento exponencial dos nós expandidos do B\\&B: nós $\\approx a\\cdot b^n$.",
                 "tab:complexity-nodes",
-                {"strategy": "Rota inicial", "a": "$a$", "b": "$b$", "r2_log": "$R^2$ (log)"})
+                {"strategy": "Rota inicial", "a": "$a$", "b": "$b$", "r2_log": "$R^2$ (log)"},
+                {"b": 3})
 
     plotting.plot_time(samples, time_fits, figures)
     plotting.plot_memory(memory, memory_fits, MEMORY_SERIES, figures)

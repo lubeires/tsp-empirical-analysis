@@ -1,8 +1,8 @@
 {
   "friedman_stat": 42.91696750902527,
   "friedman_p": 1.0766619069502163e-08,
-  "spearman_rho_gap_vs_nodes_ratio": 0.7847439981749406,
-  "spearman_p": 8.052112477649788e-17,
+  "spearman_rho_gap_vs_nodes_ratio": 0.78214992426184,
+  "spearman_p": 1.1860969989149033e-16,
   "instances": 15,
   "monotonicity_violations": 0,
   "root_bound_max_spread": 0.0

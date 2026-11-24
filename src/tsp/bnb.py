@@ -63,14 +63,20 @@ def lower_bound(dist, first: int, last: int, path_cost: int,
 
     U = não visitados; pi[i] = penalidade de unvisited[i]; w(i,j) = d(i,j) + πi + πj.
 
-        LB(π) = custo(caminho) + MST_w(U) + min_u (d(last,u) + πu)
-                + min_u (d(first,u) + πu) - 2·Σ πu
+        LB(π) = custo(caminho) + MST_w(U) + min_{a != b} [(d(last,a) + πa) + (d(first,b) + πb)]
+                - 2·Σ πu
 
-    Válido para QUALQUER π: em toda forma de completar a rota (aresta de last até U,
-    caminho por todo U, aresta de U até first), cada vértice de U tem grau exatamente 2,
+    Válido para QUALQUER π: em toda forma de completar a rota (aresta de last até a,
+    caminho por todo U, aresta de b até first), cada vértice de U tem grau exatamente 2,
     então o custo com pesos w é o custo real + 2·Σπ. E esse custo com pesos w é
-    >= MST_w(U) + as duas menores arestas (o caminho por U é uma árvore geradora de U).
+    >= MST_w(U) + as duas arestas das pontas (o caminho por U é uma árvore geradora de U).
+    Com |U| >= 2 o caminho por U começa e termina em vértices DIFERENTES (a != b).
     Com π = 0, é o limite 1-tree simples da T11.
+
+    Correção da T23 (D35): a 1ª versão escolhia a e b cada um pelo seu mínimo. Quando o
+    vizinho mais próximo das duas pontas era o mesmo (sempre na raiz, onde first == last),
+    a mesma aresta entrava duas vezes: limite válido, mas mais fraco, e a estrutura nunca
+    virava uma rota (esse vértice ficava com grau >= 3).
 
     Devolve (LB, graus): graus[i] = grau de unvisited[i] na estrutura (MST + as duas
     arestas escolhidas). É o que o subgradiente usa (grau - 2).
@@ -79,6 +85,15 @@ def lower_bound(dist, first: int, last: int, path_cost: int,
     out = dist[last, unvisited] + pi    # arestas saindo do fim do caminho
     back = dist[first, unvisited] + pi  # arestas voltando ao início
     a, b = int(np.argmin(out)), int(np.argmin(back))
+    if a == b and k >= 2:
+        # Mesmo vizinho mais próximo nas duas pontas: melhor par com vértices distintos
+        # (o 2º menor de um lado com o menor do outro)
+        a2 = int(np.argmin(np.where(np.arange(k) == a, np.inf, out)))
+        b2 = int(np.argmin(np.where(np.arange(k) == b, np.inf, back)))
+        if out[a] + back[b2] <= out[a2] + back[b]:
+            b = b2
+        else:
+            a = a2
 
     weights = dist[np.ix_(unvisited, unvisited)] + pi[:, None] + pi[None, :]
     edges, mst_cost = prim(weights)  # posições 0..k-1

@@ -37,19 +37,22 @@ resultados mostram que:
   \item o B\&B com limite de Held-Karp~\cite{held1970,held1971} prova o ótimo de todas
     as 15 instâncias dentro do limite de 30 minutos, mas nenhuma das cinco estratégias
     fecha a instância com 75 vértices;
-  \item a inserção pelo fecho convexo reduz o número de nós expandidos em 78\% (média
+  \item a inserção pelo fecho convexo reduz o número de nós expandidos em 77\% (média
     geométrica) em relação à rota trivial; as outras estratégias ajudam pouco, porque o
     primeiro ramo da busca já reproduz a rota do vizinho mais próximo;
   \item o emparelhamento perfeito de custo mínimo responde por até 93\% do tempo do
     Christofides, com crescimento empírico próximo de $n^3$;
-  \item a entropia espacial e o índice de agrupamento de
-    Clark-Evans~\cite{clark1954} pioram a qualidade dos algoritmos baseados em árvore
-    geradora mínima, mas nenhum modelo único generaliza entre os algoritmos.
+  \item a distribuição uniforme dos pontos (entropia espacial e índice de
+    Clark-Evans~\cite{clark1954}) piora a qualidade dos algoritmos baseados em árvore
+    geradora mínima, mas nenhum modelo único generaliza entre os algoritmos;
+  \item na instância mais difícil do conjunto, o limite de Held-Karp fica 2,1\% abaixo do
+    ótimo mesmo com o subgradiente convergido: o gap é da própria relaxação.
 \end{itemize}
 
 O texto está organizado da seguinte forma. A Seção~\ref{sec:impl} descreve as
 estruturas de dados, os algoritmos, a instrumentação e a auditoria do código, gerado com
 apoio de uma ferramenta de IA. A Seção~\ref{sec:experiments} apresenta a configuração
-experimental e os resultados das três análises, e a Seção~\ref{sec:conclusions} resume
-as conclusões. Código, dados brutos, figuras e o histórico de \emph{prompts} estão no
+experimental, os resultados das três análises e o caso adversarial do limite inferior, e
+a Seção~\ref{sec:conclusions} resume as conclusões. O Apêndice~\ref{app:extra} traz
+tabelas e figuras complementares. Código, dados brutos, figuras e o histórico de \emph{prompts} estão no
 repositório do trabalho.

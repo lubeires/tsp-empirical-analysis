@@ -1,0 +1,46 @@
+\appendix
+\section{Resultados complementares}\label{app:extra}
+
+\input{\results{complexity_memory.tex}}
+\input{\results{complexity_bnb_nodes.tex}}
+\input{\results{collapse.tex}}
+\input{\results{sensitivity_regression.tex}}
+\input{\results{adversarial_root.tex}}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.75\textwidth]{warmstart_nodes_ratio.pdf}
+  \caption{Nós expandidos em razão à rota trivial, por instância (escala log; abaixo de 1
+    = menos nós).}
+  \label{fig:nodes-ratio}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.75\textwidth]{complexity_memory.pdf}
+  \caption{Pico de memória por sub-rotina (\texttt{tracemalloc}).}
+  \label{fig:memory}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.75\textwidth]{complexity_bnb_nodes.pdf}
+  \caption{Nós expandidos do B\&B por rota inicial (escala log) e ajuste exponencial.}
+  \label{fig:nodes}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.75\textwidth]{warmstart_gap_vs_nodes.pdf}
+  \caption{Gap da rota inicial contra a razão de nós em relação à rota trivial
+    (Spearman $\rho = 0{,}78$).}
+  \label{fig:gap-nodes}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.75\textwidth]{sensitivity_coefficients.pdf}
+  \caption{Coeficientes da regressão agrupada, com intervalo de 95\% por \emph{bootstrap}
+    de instâncias.}
+  \label{fig:coefficients}
+\end{figure}

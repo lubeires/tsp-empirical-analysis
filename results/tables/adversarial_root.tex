@@ -1,0 +1,29 @@
+\begin{table}[htb]
+\centering
+\caption{Limite de Held-Karp na raiz: distância ao ótimo (na rd100-n75, à melhor rota encontrada), com o limite corrigido e com a 1ª versão (aresta repetida, D35), e vértices de grau $\neq 2$ na estrutura.}
+\label{tab:adversarial}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\toprule
+Instância & $N$ & \begin{tabular}[b]{@{}c@{}}Gap da\\raiz (\%)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Gap 1ª\\versão (\%)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Grau\\$\neq 2$\end{tabular} & \begin{tabular}[b]{@{}c@{}}Arestas fora\\da rota\end{tabular} \\
+\midrule
+kroA100-n12 & 12 & 0{,}000 & 0{,}019 & 0 & 0 \\
+rd100-n14 & 14 & 0{,}000 & 0{,}020 & 0 & 0 \\
+pr76-n16 & 16 & 0{,}000 & 0{,}025 & 0 & 0 \\
+lin105-n18 & 18 & 0{,}000 & 0{,}015 & 0 & 0 \\
+pr107-n20 & 20 & 0{,}000 & 0{,}003 & 0 & 0 \\
+d198-n22 & 22 & 0{,}090 & 0{,}093 & 2 & 3 \\
+pr76-n24 & 24 & 0{,}000 & 0{,}011 & 0 & 0 \\
+pr107-n27 & 27 & 0{,}012 & 0{,}016 & 2 & 2 \\
+d198-n30 & 30 & 0{,}018 & 0{,}017 & 2 & 2 \\
+kroA100-n33 & 33 & 2{,}129 & 2{,}112 & 4 & 7 \\
+lin105-n36 & 36 & 0{,}017 & 0{,}017 & 4 & 2 \\
+rd100-n40 & 40 & 0{,}000 & 0{,}010 & 0 & 0 \\
+eil51 & 51 & 0{,}845 & 0{,}846 & 16 & 9 \\
+berlin52 & 52 & 0{,}005 & 0{,}018 & 2 & 1 \\
+st70 & 70 & 0{,}612 & 0{,}625 & 12 & 14 \\
+rd100-n75 & 75 & 3{,}145 & 3{,}146 & 8 & 9 \\
+\bottomrule
+\end{tabular}
+\end{table}

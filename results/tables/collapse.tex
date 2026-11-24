@@ -2,15 +2,17 @@
 \centering
 \caption{Ponto de colapso: ajuste $\log t = \alpha + \beta n$ nas 15 instâncias e resultado observado na instância de estresse rd100-n75.}
 \label{tab:collapse}
-\begin{tabular}{llllll}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrlr}
 \toprule
-Rota inicial & $e^{\beta}$ & N previsto (30 min) & Previsto N=75 (s) & Obs. N=75 & Tempo obs. (s) \\
+Rota inicial & $e^{\beta}$ & \begin{tabular}[b]{@{}c@{}}N previsto\\(30 min)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Previsto\\N = 75 (s)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Observado\\N = 75\end{tabular} & \begin{tabular}[b]{@{}c@{}}Tempo\\obs. (s)\end{tabular} \\
 \midrule
-trivial & 1.160 & 74.757 & 1866.0 & NA & 1800.0 \\
-nn & 1.156 & 75.335 & 1714.6 & NA & 1800.0 \\
-hull & 1.156 & 78.142 & 1141.9 & NA & 1800.0 \\
-twice\_around & 1.158 & 75.007 & 1798.3 & NA & 1800.0 \\
-christofides & 1.161 & 74.838 & 1844.1 & NA & 1800.0 \\
+Trivial & 1{,}172 & 72{,}9 & 2498 & NA & 1800 \\
+Vizinho mais próximo & 1{,}176 & 72{,}2 & 2819 & NA & 1800 \\
+Fecho + inserção & 1{,}178 & 74{,}0 & 2104 & NA & 1800 \\
+Twice-around & 1{,}171 & 72{,}8 & 2531 & NA & 1800 \\
+Christofides & 1{,}168 & 73{,}9 & 2119 & NA & 1800 \\
 \bottomrule
 \end{tabular}
 \end{table}

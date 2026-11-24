@@ -7,8 +7,8 @@ from analysis.__main__ import FIGURES, TABLES, expected_outputs
 
 def test_expected_outputs():
     outputs = expected_outputs()
-    assert len(FIGURES) == 10 and len(TABLES) == 20
-    assert len(outputs) == 1 + 20 + 10 * 2  # features + tabelas + figuras em pdf e png
+    assert len(FIGURES) == 11 and len(TABLES) == 24
+    assert len(outputs) == 1 + 24 + 11 * 2  # features + tabelas + figuras em pdf e png
     assert len(set(outputs)) == len(outputs)
 
 

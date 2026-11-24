@@ -26,9 +26,8 @@
 % TODO(autora): preencher nome, matrícula e e-mail
 \author{Luana Palhares\inst{1}}
 
-\address{Departamento de Ciência da Computação -- Universidade Federal de Minas Gerais
-  (UFMG)\\
-  Belo Horizonte -- MG -- Brasil
+\address{Departamento de Ciência da Computação\\
+  Universidade Federal de Minas Gerais (UFMG) -- Belo Horizonte -- MG -- Brasil
   \email{luanapalhares@ufmg.br}
 }
 
@@ -44,8 +43,10 @@
   warm-start strategies for the B\&B upper bound are compared by the size of the search
   tree, and the solution quality of the approximations is related to geometric features
   of the instances. The exact method solves every instance within 30 minutes but
-  collapses near 75 vertices; convex-hull insertion reduces the tree by 78\%; the
-  matching dominates the cost of Christofides.
+  collapses near 75 vertices, as predicted; convex-hull insertion reduces the tree by
+  77\%, since most of the time is spent finding, not proving, the optimum; the matching
+  dominates the cost of Christofides; and the hardest instance is explained by the
+  integrality gap of the Held-Karp relaxation.
 \end{abstract}
 
 \begin{resumo}
@@ -56,8 +57,10 @@
   regressão, cinco estratégias de \emph{warm-start} do limite superior do B\&B são
   comparadas pelo tamanho da árvore de busca e a qualidade das aproximações é
   relacionada a características geométricas das instâncias. O método exato resolve todas
-  as instâncias em até 30 minutos, mas colapsa perto de 75 vértices; a inserção pelo
-  fecho convexo reduz a árvore em 78\%; o emparelhamento domina o custo do Christofides.
+  as instâncias em até 30 minutos, mas colapsa perto de 75 vértices, como previsto; a
+  inserção pelo fecho convexo reduz a árvore em 77\%, porque a maior parte do tempo vai
+  para achar o ótimo, e não para prová-lo; o emparelhamento domina o custo do
+  Christofides; e a instância mais difícil é explicada pelo gap da relaxação de Held-Karp.
 \end{resumo}
 
 \input{sections/introduction}
@@ -67,5 +70,8 @@
 
 \bibliographystyle{sbc}
 \bibliography{references}
+
+\clearpage
+\input{sections/appendix}
 
 \end{document}

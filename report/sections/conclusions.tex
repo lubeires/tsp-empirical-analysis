@@ -1,4 +1,42 @@
-% TODO(T23)
 \section{Conclusões}\label{sec:conclusions}
 
-\emph{[Seção a ser escrita na T23.]}
+Este trabalho comparou um B\&B exato a dois algoritmos aproximados e três heurísticas
+construtivas para o PCV euclidiano, com instrumentação de tempo e memória por sub-rotina.
+As três perguntas da introdução têm as seguintes respostas.
+
+\paragraph{Complexidade empírica.} Na faixa $N \leq 70$, as curvas medidas não reproduzem
+a complexidade teórica dos algoritmos vetorizados. O vizinho mais próximo, o Prim e a
+inserção crescem com expoentes de 1,05 a 1,30, porque o custo fixo de cada operação do
+NumPy domina e o expoente conta as iterações do laço Python. Onde o código é Python puro,
+a teoria aparece: o emparelhamento do NetworkX cresce com $b \approx 3$ e responde por
+até 93\% do tempo do Christofides. O coletor de lixo não teve efeito mensurável. A
+memória ficou longe de ser um gargalo: a matriz de distâncias segue $n^2$ com um pico de
+$\approx 5\times$ por causa de temporários, e a DFS mantém a memória do B\&B em $O(n^2)$.
+
+\paragraph{\emph{Warm-start}.} O B\&B com limite de Held-Karp provou o ótimo das 15
+instâncias, mas o tempo cresce $\approx 17\%$ por vértice, e o colapso previsto entre
+$N \approx 72$ e $74$ se confirmou na instância com 75 vértices. Com o limite forte, a maior parte do tempo vai para achar a
+rota ótima, não para provar. Por isso uma boa rota inicial ajuda tanto: a inserção pelo
+fecho convexo cortou 77\% dos nós e venceu em todas as instâncias, a um custo de
+milissegundos. As rotas iniciais piores do que a do vizinho mais próximo não ajudam,
+porque a própria DFS encontra essa rota na primeira descida.
+
+\paragraph{Sensibilidade.} As aproximações ficaram muito abaixo das garantias teóricas.
+A distribuição uniforme dos pontos (entropia espacial, índice de Clark-Evans) piora os
+algoritmos baseados em AGM. Nenhum modelo único, porém, explica o gap de todos os
+algoritmos, porque as mesmas características têm efeitos opostos em algoritmos
+diferentes. O caso adversarial mostrou que o gap da relaxação de Held-Karp, e não a
+convergência do subgradiente, explica a instância mais difícil do conjunto, e revelou um
+defeito no limite, corrigido antes dos resultados finais.
+
+\paragraph{Limitações.} O conjunto tem 15 instâncias, o que limita o poder dos testes e
+dos modelos. As sub-instâncias são amostras de instâncias maiores, não instâncias
+independentes. Os parâmetros do subgradiente foram ajustados no próprio conjunto de
+teste. Os tempos do B\&B foram medidos com processos em paralelo, o que torna frágil a
+previsão do ponto de colapso, baseada em tempo.
+
+\paragraph{Trabalhos futuros.} Incorporar desigualdades de pente ao limite atacaria
+diretamente o caso adversarial. Aumentar as iterações do subgradiente nos nós internos
+poderia reduzir a árvore nas instâncias de limite justo. Trocar o emparelhamento do
+NetworkX por uma implementação compilada mostraria se o Christofides passa a competir em
+tempo com a inserção pelo fecho, que teve gap mediano menor.

@@ -66,15 +66,252 @@ e a rodada pode ser retomada.
     das execuções de tempo. As alocações são determinísticas, então uma execução basta.
 \end{itemize}
 
-% TODO(T23): resultados
 \subsection{Complexidade empírica}\label{sec:complexity}
 
-\emph{[Seção a ser escrita na T23.]}
+Para cada algoritmo e sub-rotina, a mediana das 30 repetições em função de $N$ foi
+ajustada aos modelos $a\,n + c$, $a\,n^2 + c$, $a\,n^2\log n + c$ e $a\,n^3 + c$ por
+mínimos quadrados com erro relativo (os tempos vão de microssegundos a dezenas de
+milissegundos, e com erro absoluto os maiores $N$ dominariam o ajuste). O melhor modelo
+é o de menor RMSE relativo. Também foi ajustado o modelo livre $a\,n^b + c$, com intervalo
+de confiança de 95\% para $b$ por \emph{bootstrap} das repetições
+(Tabela~\ref{tab:complexity-time}, Figuras~\ref{fig:time-alg} e~\ref{fig:time-sub}).
+
+\input{\results{complexity_time.tex}}
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.72\textwidth]{complexity_time_algorithms.pdf}
+  \caption{Tempo por execução das heurísticas e dos aproximados (mediana de 30
+    repetições; barras = intervalo interquartil; linha = melhor modelo).}
+  \label{fig:time-alg}
+\end{figure}
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.72\textwidth]{complexity_time_subroutines.pdf}
+  \caption{Tempo por sub-rotina do Twice-around, da inserção e do Christofides.}
+  \label{fig:time-sub}
+\end{figure}
+
+\paragraph{A vetorização esconde a complexidade na faixa medida.} O vizinho mais próximo
+($O(n^2)$) cresce com $b = 1{,}05$; o Prim, também $O(n^2)$, com $b = 1{,}30$; e a
+inserção pelo fecho ($O(n^3)$), com $b = 1{,}30$. Nos três, o trabalho é um laço Python
+de $n$ passos, e cada passo é uma operação do NumPy sobre um vetor ou matriz de até
+$70$ ou $35 \times 35$ elementos. Nessa escala, o custo de cada operação é dominado pelo
+custo fixo de chamada ($\sim\mu$s), e não pelo número de elementos: o expoente medido
+conta as iterações do laço, não as operações aritméticas. A complexidade teórica só
+apareceria com $N$ bem maior. A rota trivial, que só copia a ordem do arquivo, não tem
+tendência mensurável ($R^2 < 0$, $\approx 1{,}4~\mu$s em todos os $N$).
+
+\paragraph{O emparelhamento domina o Christofides.} O Christofides cresce com
+$b = 2{,}84$ (IC 2,72--2,97), puxado pelo emparelhamento ($b = 2{,}98$, IC 2,89--3,11),
+que é Python puro no NetworkX e por isso expõe o $O(|O|^3)$ do algoritmo de blossom. A
+montagem do grafo completo dos vértices ímpares, que deveria ser $O(|O|^2)$, cresce com
+$b = 2{,}65$. Uma explicação possível, não verificada, é o coletor de lixo: o
+Christofides é o único algoritmo que o dispara com frequência (430 coletas nas 450
+repetições com o coletor ligado; a inserção teve 45; os demais, nenhuma), e cada coleta percorre todos
+os objetos vivos, incluindo os do grafo.
+
+\paragraph{Coletor de lixo.} A razão entre os tempos com e sem coletor, por instância e
+algoritmo, tem mediana entre 0,85 e 1,02 nos cinco algoritmos, com dispersão de 0,49 a
+1,61. Como essa dispersão aparece também na rota trivial e no vizinho mais próximo, que
+não disparam nenhuma coleta, ela é ruído de medição, e o efeito do coletor não é
+mensurável na faixa $N \leq 70$.
+
+\paragraph{Memória.} O pico de alocação da matriz de distâncias cresce com $b = 1{,}90$
+(modelo $n^2$, $R^2 = 0{,}99$), com o pico de $\approx 5{,}4\times$ o tamanho final já
+discutido na Seção~\ref{sec:audit}. A memória da busca do B\&B segue $n^2$ ($R^2 = 0{,}99$),
+como esperado para $n$ níveis de recursão com um vetor de penalidades cada. A inserção
+tem $b = 2{,}45$, acima do $n^2$ teórico da matriz de acréscimos; com $N \leq 70$ e uma
+constante aditiva no modelo, porém, o expoente livre é pouco identificável, e o modelo
+$n^2$ também ajusta bem ($R^2 = 0{,}99$, RMSE de 6,4\% contra 4,6\%). A tabela completa
+está no Apêndice~\ref{app:extra}.
+
+\paragraph{Nós do B\&B.} O número de nós expandidos cresce de forma exponencial, com fator
+de 1,11 a 1,17 por vértice adicional conforme a rota inicial (ajuste de
+$\log(\text{nós})$ em $N$, $R^2$ de 0,78 a 0,90; Apêndice~\ref{app:extra}).
 
 \subsection{Impacto do \emph{warm-start}}\label{sec:warmstart}
 
-\emph{[Seção a ser escrita na T23.]}
+A Tabela~\ref{tab:warmstart} compara as cinco rotas iniciais pelo número de nós
+expandidos, em razão à rota trivial na mesma instância. O número de nós é a medida
+principal: o B\&B é determinístico, e ao contrário do tempo, os nós não dependem da carga
+da máquina (Seção~\ref{sec:setup}).
+
+\input{\results{warmstart_summary.tex}}
+
+\paragraph{Só a inserção pelo fecho reduz muito a árvore.} A inserção pelo fecho
+convexo, com gap inicial mediano de 0,9\%, expande 77\% menos nós que a rota trivial
+(média geométrica) e vence nas 15 instâncias ($p = 0{,}003$ no Wilcoxon pareado com
+correção de Holm; Friedman $\chi^2 = 42{,}9$, $p = 10^{-8}$). O Christofides reduz 23\% e
+vence em 11 instâncias; o vizinho mais próximo e o Twice-around, só 8\%
+(Figura~\ref{fig:nodes-ratio}, no apêndice). A correlação de Spearman entre o gap inicial e a razão de
+nós é $\rho = 0{,}78$.
+
+\paragraph{Por que as rotas fracas quase não ajudam.} A busca desce primeiro pelo filho
+mais próximo do fim do caminho. A primeira folha que ela alcança é, portanto, a rota do
+vizinho mais próximo partindo do vértice 0, e isso ocorreu em 14 das 15 instâncias. Daí
+em diante o limite superior já é pelo menos tão bom quanto essa rota, e qualquer rota
+inicial pior do que ela (a trivial, com gap mediano de 68\%, e o Twice-around, com 26\%)
+é descartada na primeira descida. O Twice-around empatou com a trivial em 10 das 15
+instâncias. Uma rota inicial só reduz a árvore se for melhor do que o vizinho mais
+próximo, e quanto melhor, maior a redução. A monotonicidade garantida pelo projeto do
+limite (Seção~\ref{sec:bnb}) foi confirmada: nenhuma rota inicial melhor expandiu mais nós.
+
+\paragraph{O \emph{trade-off} compensa.} Nenhuma heurística passou de 45~ms (o
+Christofides, na rd100-n75). A maior fração do tempo do B\&B gasta na heurística foi de
+11\%: a inserção pelo fecho na kroA100-n12, que fecha em 0,02~s. Nessas execuções o tempo
+da heurística inclui a primeira chamada no processo, sem aquecimento. Nas instâncias em
+que o B\&B leva segundos ou mais, a heurística é desprezível. A inserção pelo fecho
+reduziu o tempo mediano em 40\% e o tempo total das 15 instâncias em 658~s, quase todo no
+st70 (de 1\,461~s com a rota trivial para 796~s).
+
+\paragraph{Achar custa mais que provar.} A Figura~\ref{fig:find-prove} separa o tempo do
+B\&B em achar a melhor rota (instante da última melhoria do limite superior) e provar que
+ela é ótima. No st70, com quatro das cinco rotas iniciais, a busca levou de 1\,270 a
+1\,330~s para achar o ótimo e só 180--190~s para provar. Com a inserção pelo fecho, achar
+levou 509~s. Na mediana das 15 instâncias com a rota trivial, 86\% do tempo foi gasto
+achando a rota. Com um limite inferior forte, o gargalo do B\&B é chegar a um bom limite
+superior, e é exatamente isso que o \emph{warm-start} oferece.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\textwidth]{warmstart_find_vs_prove.pdf}
+  \caption{Tempo para achar a melhor rota e para provar a otimalidade, nas duas maiores
+    instâncias. Na rd100-n75 o prazo venceu antes da prova.}
+  \label{fig:find-prove}
+\end{figure}
+
+\paragraph{Ponto de colapso.} Ajustando $\log t = \alpha + \beta N$ nas 15 instâncias, o
+tempo cresce por um fator $e^\beta$ de 1,17 a 1,18 por vértice (dobra a cada
+$\sim$4,3 vértices), e o prazo de 30 minutos seria atingido entre $N \approx 72$ e
+$N \approx 74$, conforme a rota inicial (Figura~\ref{fig:collapse};
+Tabela~\ref{tab:collapse} no apêndice). A instância de estresse rd100-n75 confirmou o
+colapso para as cinco: nenhuma fechou. Três rotas iniciais (inserção pelo fecho,
+Twice-around e Christofides) chegaram à rota de custo 7\,205 por volta de 1\,490~s; com a
+trivial e o vizinho mais próximo, a busca parou em 7\,230. O limite da raiz (6\,985)
+garante que 7\,205 está no máximo 3,15\% acima do ótimo. A previsão é frágil: os tempos
+vêm de execuções em paralelo, e na rodada anterior (com o limite da D35) o mesmo ajuste
+previa $N \approx 78$ para a inserção pelo fecho. Além disso, o tempo não depende só de
+$N$: a kroA100-n33 aparece na Figura~\ref{fig:collapse} muito acima da reta
+(Seção~\ref{sec:adversarial}).
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\textwidth]{collapse.pdf}
+  \caption{Tempo do B\&B em função de $N$ e ajuste exponencial por rota inicial. O
+    tracejado é o prazo de 30 minutos; o marcador grande, vazado, é a rd100-n75.}
+  \label{fig:collapse}
+\end{figure}
+
+\subsection{Caso adversarial: onde o limite de Held-Karp falha}\label{sec:adversarial}
+
+Na maioria das instâncias, o limite de Held-Karp na raiz fica a menos de 0,03\% do ótimo
+(Tabela~\ref{tab:adversarial}, no apêndice). Três fogem disso: eil51 (0,85\%), st70 (0,61\%) e, com
+o maior gap entre as sub-instâncias, kroA100-n33 (2,1\%). Esta última expandiu 1\,424 nós
+com a rota trivial, contra 641 da rd100-n40, que é maior. Em 7 das 12 sub-instâncias o
+limite da raiz é igual ao ótimo. Para entender onde o limite
+falha, o subgradiente da raiz foi refeito e a estrutura que realiza o limite (AGM
+penalizada mais as duas arestas do vértice 0) foi desenhada sobre a rota ótima
+(Figura~\ref{fig:adversarial}).
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.88\textwidth]{adversarial_structure.pdf}
+  \caption{Estrutura do limite de Held-Karp na raiz sobre a rota ótima. Na rd100-n40, a
+    estrutura coincide com a rota ótima. Na kroA100-n33, dois vértices de grau 3 e
+    duas folhas permanecem, e 7 arestas da estrutura não estão na rota.}
+  \label{fig:adversarial}
+\end{figure}
+
+\paragraph{O gap é da relaxação, não do subgradiente.} Com 10\,000 iterações em vez de
+300, o gap da kroA100-n33 continua em 2,1\% (eil51: 0,84\%; st70: 0,60\%). O subgradiente
+convergiu, e o que sobra é a diferença entre o ótimo inteiro e o ótimo da relaxação, que
+no Held-Karp coincide com o da relaxação linear com eliminação de
+subciclos~\cite{held1970}. Na rd100-n40, as penalidades levam a estrutura a ter grau 2
+em todos os vértices: ela vira uma rota e o limite iguala o ótimo. Na kroA100-n33, a
+rota ótima precisa de arestas longas para entrar e sair de grupos de pontos próximos (à
+esquerda na figura). A relaxação prefere ramificar dentro dos grupos, criando vértices de
+grau 3 e folhas. Penalizar um vértice de grau 3 só desloca a ramificação para um vizinho,
+sem reduzir o custo da estrutura. A configuração lembra os ``pentes'' (\emph{combs}) da
+literatura, desigualdades que a relaxação de subciclos não impõe~\cite{applegate2006}.
+
+\paragraph{Um defeito encontrado e corrigido por esta análise.} Ao reconstruir a
+estrutura, notou-se que a 1.ª versão do limite escolhia a aresta de cada ponta do caminho
+pelo seu próprio mínimo. Quando o vértice mais próximo das duas pontas era o mesmo, a
+mesma aresta entrava duas vezes. Na raiz isso acontecia sempre, porque as duas pontas são
+o vértice 0, e a estrutura nunca virava uma rota. O limite era válido, mas mais fraco. A
+versão corrigida, usada em todos os resultados deste artigo, escolhe o melhor par de
+vértices distintos, como em~(\ref{eq:lb}). As 80 execuções do B\&B foram refeitas, e as
+antigas foram guardadas para comparação. O custo final é o mesmo em todas as 75 que
+fecharam, e a razão de nós tem mediana 1,00 (35 execuções com menos nós, 23 com mais). O
+maior ganho foi no st70, com 6 a 10\% menos nós. A maior perda foi na d198-n22, com até
+$1{,}95\times$ mais nós, porque a correção muda a trajetória das penalidades. Para o
+mesmo $\pi$, o limite corrigido nunca é menor; com outra trajetória, porém, o limite final
+da raiz ficou ligeiramente menor em duas instâncias (até 0,02\%). Na kroA100-n33 a
+correção não mudou o gap, o que confirma que ele vem da relaxação.
+
+\paragraph{O gap da raiz não explica tudo.} Entre as 15 instâncias, a correlação entre o
+gap da raiz e os nós expandidos, controlando $N$, não é significativa (Spearman parcial
+$-0{,}11$, $p = 0{,}70$). O berlin52, com gap de 0,005\%, expandiu mais nós que o eil51,
+com 0,85\%. O gap da raiz explica o caso extremo; no resto, os nós vêm principalmente de achar
+a rota (Seção~\ref{sec:warmstart}) e do limite nos nós internos, calculado com só 10
+iterações do subgradiente.
 
 \subsection{Análise de sensibilidade}\label{sec:sensitivity}
 
-\emph{[Seção a ser escrita na T23.]}
+O gap das aproximações (custo sobre o ótimo) varia muito entre as instâncias: mediana de
+0,9\% na inserção pelo fecho, 6,3\% no Christofides, 17\% no vizinho mais próximo e 26\% no
+Twice-around, sempre bem abaixo das garantias teóricas (o pior caso observado foi 13\% no
+Christofides e 42\% no Twice-around, contra 50\% e 100\%). Para relacionar esse gap à
+geometria, foram calculadas nove características por instância: $N$, razão de aspecto,
+proporção de pontos no fecho convexo, entropia espacial numa grade, índice de agrupamento
+de Clark-Evans~\cite{clark1954}, grau máximo e proporção de folhas na AGM, coeficiente de
+variação da distância ao vizinho mais próximo e proporção de vértices ímpares na AGM. A
+rota trivial ficou de fora, porque seu gap depende da ordem do arquivo e não da geometria.
+
+Com 15 instâncias e 9 características, qualquer modelo com todas superajusta. Por isso a
+análise tem três camadas, da mais robusta à mais exploratória.
+
+\paragraph{1. Correlações parciais.} Muitas características variam com $N$: a
+proporção de pontos no fecho, por exemplo, cai à medida que $N$ cresce. Por isso a
+Figura~\ref{fig:heatmap} mostra a correlação de Spearman de cada característica com o
+gap \emph{controlando $N$}. Três correlações são significativas ($p < 0{,}05$, sem
+correção para comparações múltiplas): a entropia espacial piora o Christofides
+($\rho = 0{,}61$) e o Twice-around ($\rho = 0{,}56$), e o índice de Clark-Evans piora o
+Christofides ($\rho = 0{,}53$, $p = 0{,}0496$). Os dois medem o quanto os pontos estão
+espalhados de modo uniforme, e os dois algoritmos são baseados na AGM. Uma
+interpretação coerente é que, com pontos uniformes, a AGM tem muitas ramificações, e os
+atalhos sobre o percurso dela custam mais. No vizinho mais próximo os sinais tendem ao
+oposto (proporção de folhas, $\rho = -0{,}47$; ímpares, $\rho = -0{,}45$), mas sem
+significância.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.88\textwidth]{sensitivity_heatmap.pdf}
+  \caption{Correlação de Spearman parcial (controlando $N$) entre cada característica e o
+    gap. Vermelho: a característica piora o gap; azul: facilita.}
+  \label{fig:heatmap}
+\end{figure}
+
+\paragraph{2. Regressão agrupada: um resultado negativo.} Uma regressão linear
+padronizada juntando os quatro algoritmos (gap em escore $z$ dentro de cada algoritmo; 60
+linhas; uma característica removida por VIF $> 10$) tem $R^2 = 0{,}44$ na amostra, mas
+$R^2 = -0{,}27$ fora dela, deixando uma instância de fora por vez. Nenhum coeficiente tem
+intervalo de 95\% (\emph{bootstrap} de instâncias) que exclua o zero. O motivo aparece
+na Figura~\ref{fig:heatmap}: a mesma característica tem sinais opostos em algoritmos
+diferentes, e um modelo comum anula esses efeitos. Não há um modelo único de ``instância
+difícil'' para as aproximações.
+
+\paragraph{3. Árvores de decisão.} Uma árvore de profundidade 2 por algoritmo ajusta bem
+na amostra ($R^2$ de 0,70 a 0,86), mas só a do Christofides tem $R^2$ positivo fora da
+amostra (0,19). Ela divide primeiro por $N \leq 34{,}5$ e depois pela entropia espacial,
+com o gap previsto subindo de 3,5\% (instâncias pequenas e agrupadas) a 12\% (grandes e
+uniformes). É a mesma conclusão da primeira camada. Para os outros algoritmos, as
+divisões não se sustentam fora da amostra.
+
+\paragraph{Instâncias com geometria extrema.} As instâncias com estrutura mais extrema
+não foram as piores. A d198-n22, com um ponto isolado longe dos demais, teve gaps abaixo
+da mediana em todos os algoritmos. A pr107-n20 foi fácil para o vizinho mais próximo
+(0,4\%), mas no Twice-around ficou na mediana (25,8\%): a mesma instância pode ser fácil
+para um algoritmo e comum para outro.
