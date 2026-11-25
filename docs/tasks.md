@@ -35,7 +35,7 @@ Derivadas de `docs/plan.md`. Uma tarefa por vez: explicação → aprovação �
 
 ## Fase 5: Relatório e entrega (23–24/11)
 - [x] **T22** Rascunho da Introdução e de Implementação/Auditoria (pode começar durante o T15). *Pronto quando:* PDF compilando sem erros, com as seções 1, 2 e a configuração experimental.
-- [ ] **T23** Resultados e Conclusões. *Pronto quando:* artigo completo.
-- [ ] **T24** README de reprodução, exportar prompts, checar a especificação ponto a ponto. *Pronto quando:* tudo pronto para subir no GitHub.
+- [x] **T23** Resultados e Conclusões. *Pronto quando:* artigo completo.
+- [x] **T24** README de reprodução, exportar prompts, checar a especificação ponto a ponto. *Pronto quando:* tudo pronto para subir no GitHub.
 
 **Em paralelo ao T15:** T16, T17, T18, T20 e T22. Só o T19 espera o B&B terminar.

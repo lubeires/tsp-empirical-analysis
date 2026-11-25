@@ -15792,3 +15792,812 @@ s=s.replace('''if __name__ == "__main__":
     dst 
 … [947 caracteres cortados]
 ```
+
+*Resultado:*
+
+```
+prompts/session-72d17e35.md: 0.7 MB
+0
+session-72d17e35.md
+```
+
+### Assistente
+
+Exportação limpa: nenhum e-mail ou termo pessoal na transcrição. A exportação final será refeita no fim da sessão, para incluir esta conversa inteira. Vejo como está o B&B.
+
+**Ferramenta: Bash** — Check B&B progress
+
+```
+date; tail -3 /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/bnb_v2b.log
+```
+
+*Resultado:*
+
+```
+Mon Nov 23 17:14:33 -03 2026
+9 tarefas pendentes (71 já concluídas)
+```
+
+**Ferramenta: Bash** — Add the prompts README and align RF4 with D26/D30
+
+```
+cat > prompts/README.md <<'EOF'
+# Histórico de prompts
+
+Anexo obrigatório do enunciado (uso de LLMs). Todo o trabalho foi feito numa única
+sessão do **Claude Code** (Anthropic), de 20/11 a 24/11/2026:
+[`session-72d17e35.md`](session-72d17e35.md).
+
+A transcrição foi convertida para Markdown por `scripts/export_prompts.py`:
+- **entram** todas as mensagens da autora, as respostas do assistente e cada uso de
+  ferramenta (comando ou arquivo, com a entrada cortada em 1 500 caracteres);
+- **saídas das ferramentas** aparecem cortadas em 1 200 caracteres;
+- **saem** o raciocínio interno do assistente, os lembretes injetados pelo sistema e
+  dados pessoais (e-mail e nome), que o script substitui por `[removido]`.
+
+Durante a sessão o contexto foi compactado algumas vezes; nesses pontos aparece um
+"Resumo automático do contexto", escrito pelo assistente para continuar o trabalho.
+EOF
+python3 - <<'EOF'
+p="docs/specification.md"; s=open(p).read()
+a="""| B&B | 15 instâncias × 5 estratégias de limite inicial (1 execução cada) |
+| Twice-around-the-tree e Christofides | 15 instâncias × 5 repetições |
+| Heurísticas | 15 instâncias × 5 repetições |"""
+b="""| B&B | 15 instâncias × 5 estratégias de limite inicial (1 execução cada), mais a instância de estresse rd100-n75 só para o ponto de colapso (D30) |
+| Twice-around-the-tree e Christofides | 15 instâncias × 30 repetições × coletor de lixo ligado e desligado (D26, substitui as 5 repetições da D13) |
+| Heurísticas | idem |"""
+assert a in s; open
+… [69 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+29:| Twice-around-the-tree e Christofides | 15 instâncias × 30 repetições × coletor de lixo ligado e desligado (D26, substitui as 5 repetições da D13) |
+```
+
+### Assistente
+
+Até aqui da T24:
+
+- **[README.md](README.md):** estrutura do projeto, ambiente, as 7 etapas de reprodução com duração, como retomar uma rodada, onde está cada requisito e a declaração de uso de IA. Ainda vou trocar algumas durações estimadas pelas medidas, quando o B&B e o profiling de memória terminarem.
+- **[scripts/export_prompts.py](scripts/export_prompts.py) e [prompts/](prompts/):** a transcrição desta sessão, em Markdown com 0,7 MB, e um README explicando o que entrou e o que foi removido.
+  - O e-mail sai automaticamente.
+  - Outros termos pessoais saem por uma lista guardada **fora do repositório**. Fiz assim porque procurar esses dados deixou seu nome e o domínio do e-mail gravados nos meus próprios comandos.
+  - Uma busca na saída final encontrou zero ocorrências.
+  - **A exportação precisa ser refeita no fim de tudo** para incluir as últimas mensagens; eu faço isso como último passo.
+- **[docs/specification.md](docs/specification.md):** o RF4 agora registra as 30 repetições × coletor de lixo (D26) e a instância de estresse (D30), que estavam só nas decisões.
+- **A sessão anterior (`4ff05f16`) ficou de fora**, como você pediu.
+
+**O B&B continua rodando** (9 execuções pendentes desde as 17h07, previsão de término por volta das **18h10**). Em seguida o profiling de memória roda sozinho. Quando os dois terminarem, eu:
+1. rodo a análise e os testes;
+2. atualizo os números do artigo (T23);
+3. escrevo a conferência da especificação ([docs/spec-check.md](docs/spec-check.md)), que depende desses números;
+4. apresento as revisões da T23 e da T24 juntas.
+
+Não deixe o computador suspender até lá.
+
+### Autora
+
+Ok, aguardo os resultados do B&B
+
+### Assistente
+
+Combinado. Aviso quando o B&B e o profiling de memória terminarem.
+
+### Autora
+
+O B&B já terminou?
+
+**Ferramenta: Bash** — Check B&B and memory profiling progress
+
+```
+date; tail -4 /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/bnb_v2b.log; tail -2 /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/mem_v2.log 2>/dev/null; pgrep -af "experiments" | grep -v pgrep | cut -c1-90; uptime
+```
+
+*Resultado:*
+
+```
+Mon Nov 23 17:47:50 -03 2026
+[3/9] st70 bnb nn -> ok (1467.4s)
+[4/9] st70 bnb christofides -> ok (1521.6s)
+[5/9] rd100-n75 bnb trivial -> NA (1801.2s)
+[6/9] rd100-n75 bnb nn -> NA (1801.2s)
+73169 /bin/bash -c source /root/.claude/shell-snapshots/snapshot-bash-1795464443687-m99giy
+73173 .venv/bin/python -m experiments.run bnb --workers 6 --time-limit 1800
+ 17:47:50 up  6:03,  1 user,  load average: 3.14, 4.19, 4.91
+```
+
+### Assistente
+
+Ainda não terminou, mas está no fim. Agora são 17h48 e **6 das 9 execuções** já terminaram.
+
+- **st70:** as 4 execuções fecharam com status `ok`.
+- **rd100-n75:** as 2 primeiras estouraram o prazo de 30 min (`NA`), como na rodada anterior.
+- **Faltam 3 execuções da rd100-n75**, que começaram por volta das 17h33 e terminam no prazo de 30 min, perto das **18h04**.
+
+Depois disso o profiling de memória do B&B roda sozinho, levando mais uns 10 minutos. A previsão para tudo é **por volta de 18h15**. Aí rodo a análise, atualizo o artigo e apresento as revisões.
+
+### Autora
+
+Vou precisar suspender meu computador
+
+**Ferramenta: Bash** — Check which clocks the executor uses for deadlines
+
+```
+grep -n "time\.\(time\|monotonic\|perf_counter\)\|safety\|join(" src/experiments/run.py | head -20
+```
+
+*Resultado:*
+
+```
+16:  a comunicação dos demais. O resultado é lido ANTES do join(), para o filho nunca
+173:        start = time.perf_counter()
+175:        time_heuristic = time.perf_counter() - start
+177:        time_total = time.perf_counter() - start
+187:            "tour": " ".join(map(str, result.tour)),
+217:        start = time.perf_counter()
+219:        single = time.perf_counter() - start
+226:            start = time.perf_counter()
+229:            elapsed = (time.perf_counter() - start) / k
+233:                "gc_collections": prof.gc_collections(), "tour": " ".join(map(str, tour)),
+323:              safety_margin: float = SAFETY_MARGIN, worker_fn=None) -> None:
+340:        elapsed = time.monotonic() - started
+362:            running[receiver] = (proc, task, time.monotonic())
+370:            proc.join()
+374:            if time.monotonic() - started > task.time_limit + safety_margin:
+376:                proc.join()
+```
+
+### Assistente
+
+Pode suspender. A rodada pausa junto com o computador e continua sozinha quando ele voltar.
+
+**Por que é seguro:**
+- O B&B mede o tempo e controla o prazo com `perf_counter`, e o executor controla o limite de segurança com `time.monotonic`. Nenhum dos dois relógios conta o período suspenso.
+- Uma execução não vai ser marcada como estourada ou morta só porque o computador ficou parado.
+- Isso já aconteceu ontem à noite: a rodada ficou suspensa por horas, voltou, e as execuções continuaram normalmente.
+- O que está rodando agora são as 3 últimas execuções da rd100-n75. Elas vão terminar como `NA` no prazo de 30 min de qualquer forma, então o importante delas (nós, melhor custo e instante em que acharam a rota) não é afetado.
+
+**Ao voltar,** faltam uns 15 minutos de processamento: o restante das 3 execuções e o profiling de memória. Não precisa fazer nada; é só me avisar, e eu confiro se terminou e sigo com a análise e o artigo.
+
+**Prazo:** a entrega é amanhã (24/11) às 23h59. Depois do B&B ainda faltam atualizar o artigo, a conferência da especificação, a revisão final e a sua compilação e entrega no GitHub. Calculo umas 2 a 3 horas de trabalho, então convém retomar com folga.
+
+### Autora
+
+Pode prosseguir
+
+**Ferramenta: Bash** — Check whether B&B and memory profiling finished
+
+```
+date; tail -4 /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/bnb_v2b.log; tail -3 /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/mem_v2.log 2>/dev/null; pgrep -af "experiments" | grep -v pgrep | cut -c1-90
+```
+
+*Resultado:*
+
+```
+Mon Nov 23 18:36:01 -03 2026
+[3/9] st70 bnb nn -> ok (1467.4s)
+[4/9] st70 bnb christofides -> ok (1521.6s)
+[5/9] rd100-n75 bnb trivial -> NA (1801.2s)
+[6/9] rd100-n75 bnb nn -> NA (1801.2s)
+73169 /bin/bash -c source /root/.claude/shell-snapshots/snapshot-bash-1795464443687-m99giy
+73173 .venv/bin/python -m experiments.run bnb --workers 6 --time-limit 1800
+```
+
+**Ferramenta: Bash** — Check elapsed time of the remaining worker processes
+
+```
+ps -o pid,etime,pcpu,args --ppid 73173 | cut -c1-110; cat /proc/uptime
+```
+
+*Resultado:*
+
+```
+PID     ELAPSED %CPU COMMAND
+  73189       41:16  0.0 /home/code/alg-II/tsp-empirical-analysis/.venv/bin/python -c from multiprocessing.res
+  82036       17:04 98.8 /home/code/alg-II/tsp-empirical-analysis/.venv/bin/python -c from multiprocessing.spa
+  82134       16:53 98.6 /home/code/alg-II/tsp-empirical-analysis/.venv/bin/python -c from multiprocessing.spa
+  82163       16:48 98.6 /home/code/alg-II/tsp-empirical-analysis/.venv/bin/python -c from multiprocessing.spa
+22072.70 125368.80
+```
+
+### Assistente
+
+O computador voltou, e a rodada continuou de onde parou.
+
+- As 3 últimas execuções da rd100-n75 estão com **~17 dos 30 minutos** rodados, então faltam uns 13 minutos.
+- Em seguida o profiling de memória do B&B roda sozinho, por uns 10 minutos.
+- **Previsão para tudo: por volta das 19h.**
+
+Quando terminar, sigo direto com a análise, os testes, a atualização dos números no artigo e a conferência da especificação. Depois apresento as revisões da T23 e da T24 juntas.
+
+### Autora
+
+Ok, aguardo os resultados do B&B
+
+### Assistente
+
+Combinado. Aviso quando terminar.
+
+### Autora
+
+<task-notification>
+<task-id>bh13yfnfh</task-id>
+<tool-use-id>toolu_01LHcHWEpSotD7CjpgD6o5dp</tool-use-id>
+<output-file>/tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/tasks/bh13yfnfh.output</output-file>
+<status>completed</status>
+<summary>Background command "Resume the B&amp;B rerun, then redo B&amp;B memory profiling" completed (exit code 0)</summary>
+</task-notification>
+
+### Assistente
+
+O B&B e o profiling de memória terminaram. Confiro os logs e rodo a análise completa e os testes.
+
+**Ferramenta: Bash** — Check logs, regenerate all outputs and run the test suite
+
+```
+date; tail -3 /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/bnb_v2b.log; head -1 /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/mem_v2.log; tail -2 /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/mem_v2.log; grep -o "([0-9.]*s)" /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/mem_v2.log | tr -d '()s' | paste -sd+ | bc; .venv/bin/python -m analysis 2>&1 | tail -2; .venv/bin/python -m pytest -q 2>&1 | tail -3
+```
+
+*Resultado:*
+
+```
+Mon Nov 23 18:56:14 -03 2026
+[7/9] rd100-n75 bnb hull -> NA (1802.8s)
+[8/9] rd100-n75 bnb twice_around -> NA (1801.5s)
+[9/9] rd100-n75 bnb christofides -> NA (1801.3s)
+14 combinações pendentes
+[13/14] eil51 bnb christofides -> ok, maior pico 186 KB (120.4s)
+[14/14] berlin52 bnb christofides -> ok, maior pico 154 KB (166.2s)
+398.1
+== caso adversarial: 3.1s
+OK: 47 arquivos gerados em 81s
+........................................................................ [ 86%]
+.....................................................................    [100%]
+501 passed in 18.74s
+```
+
+### Assistente
+
+Tudo regenerado: 47 arquivos, **501 testes passando**. O profiling de memória do B&B levou cerca de 7 minutos. Agora levanto os números novos para atualizar o artigo.
+
+**Ferramenta: Bash** — Collect the updated B&B-dependent numbers
+
+```
+T=results/tables && cat $T/bound_fix_summary.json $T/warmstart_checks.json && .venv/bin/python - <<'EOF'
+import pandas as pd, numpy as np
+T="results/tables/"; kw=dict(keep_default_na=False,na_values=[""])
+print(pd.read_csv(T+"warmstart_summary.csv").round(3).to_string())
+print(pd.read_csv(T+"collapse.csv").round(3).to_string())
+print(pd.read_csv(T+"complexity_bnb_nodes.csv").round(3).to_string())
+m=pd.read_csv(T+"complexity_memory.csv"); print(m[m.series=="bnb_search"].round(3).to_string())
+a=pd.read_csv(T+"adversarial_root.csv"); print(a.round(3).to_string())
+f=pd.read_csv(T+"bound_fix.csv"); print(f[["instance","strategy","nodes_expanded_v1","nodes_expanded_v2","nodes_ratio","time_total_v1","time_total_v2","status_v2"]].round(2).to_string())
+w=pd.read_csv(T+"warmstart_per_instance.csv",**kw)
+print(w[w.instance.isin(["st70","rd100-n75"])][["instance","strategy","status","cost","nodes_expanded","time_total","t_found","t_prove"]].round(1).to_string())
+t=w[w.kind!="stress"]
+for s in ["nn","twice_around","christofides","hull"]:
+    g=t[t.strategy==s]; print(s,"<1",(g.nodes_ratio<1).sum(),"==1",(g.nodes_ratio==1).sum(),">1",(g.nodes_ratio>1).sum())
+print("found share trivial", (t[t.strategy=="trivial"].t_found/t[t.strategy=="trivial"].time_total).median())
+print(w.loc[w.heuristic_share.idxmax(),["instance","strategy","time_heuristic","time_total"]].to_dict(), w.loc[w.time_heuristic.idxmax(),["instance","strategy","time_heuristic"]].to_dict())
+print(t[t.strategy!="trivial"].groupb
+… [567 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+{
+  "pairs": 80,
+  "both_closed": 75,
+  "same_cost_when_closed": true,
+  "nodes_ratio_median": 1.0,
+  "nodes_ratio_geomean": 1.010274960502755,
+  "fewer_nodes": 35,
+  "more_nodes": 23,
+  "time_ratio_median": 0.9224923480974474,
+  "root_bound_never_lower": false,
+  "status_v2": {
+    "NA": 5,
+    "ok": 75
+  }
+}{
+  "friedman_stat": 42.91696750902527,
+  "friedman_p": 1.0766619069502163e-08,
+  "spearman_rho_gap_vs_nodes_ratio": 0.78214992426184,
+  "spearman_p": 1.1860969989149033e-16,
+  "instances": 15,
+  "monotonicity_violations": 0,
+  "root_bound_max_spread": 0.0
+}       strategy  initial_gap_pct_median  nodes_ratio_median  nodes_ratio_geomean  fewer_nodes_than_trivial  time_ratio_median  heuristic_time_max_s  heuristic_share_max_pct  wilcoxon_p  wilcoxon_p_holm
+0       trivial                  68.232               1.000                1.000                         0              1.000                 0.000                    0.058         NaN              NaN
+1            nn                  17.269               0.989                0.920                        14              0.985                 0.001                    0.328       0.006            0.012
+2          hull          
+… [15874 caracteres cortados]
+```
+
+**Ferramenta: Bash** — Check where the corrected root bound came out lower
+
+```
+.venv/bin/python -c "
+import pandas as pd; f=pd.read_csv('results/tables/bound_fix.csv'); g=f.groupby('instance')[['root_bound_v1','root_bound_v2']].first(); g['d']=(g.root_bound_v2-g.root_bound_v1); g['pp']=g.d/g.root_bound_v1*100; print(g[g.d<0].round(4)); print((g.d>0).sum(), (g.d<0).sum())
+f2=f[f.status_v2=='ok']; print('st70 range', f2[f2.instance=='st70'].nodes_ratio.round(3).tolist())"; grep -n "n75_status" results/tables/collapse.csv | head -2; sed -n 1,3p results/tables/collapse.csv
+```
+
+*Resultado:*
+
+```
+root_bound_v1  root_bound_v2       d      pp
+instance                                                 
+d198-n30         8380.5711      8380.4663 -0.1048 -0.0013
+kroA100-n33     15078.5701     15076.0570 -2.5130 -0.0167
+14 2
+st70 range [0.901, 0.942, 0.902, 0.902, 0.902]
+1:strategy,alpha,beta,growth_per_vertex,n_collapse,predicted_time_n75,n75_status,n75_time,n75_nodes,n75_ub0,n75_best_cost
+strategy,alpha,beta,growth_per_vertex,n_collapse,predicted_time_n75,n75_status,n75_time,n75_nodes,n75_ub0,n75_best_cost
+trivial,-4.082914671849589,0.15874858839586775,1.172043244364301,72.93580832895918,2497.9594506822314,NA,1800.0085994729998,68874.0,37680,7230
+nn,-4.227650540767438,0.16229275693380377,1.176204532954253,72.23484711294522,2819.4757129897107,NA,1800.0063833550012,69519.0,9458,7230
+```
+
+**Ferramenta: Bash** — Find every B&B-dependent passage in the article
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis/report && grep -n "29 mil\|75 mil\|min_{u \\\\in U}\|eq:lb\|1-tree simples\|Aresta repetida\|mesma aresta\|duas vezes\|78\\\\%\|2,1\\\\%\|0,39\|7\\\\,205\|1\\\\,220\|479\|752\|1\\\\,369\|628\|88\\\\%\|N \\\\approx 7[58]\|12\\\\%\|39~ms\|24\\\\%\|1\\\\,420\|643\|2,11\|1,16\|4,7\|1,11 a 1,17\|0,79 a 0,90\|10\\\\,000" main.tex sections/*.tex | cut -c1-170
+```
+
+*Resultado:*
+
+```
+sections/introduction.tex:40:  \item a inserção pelo fecho convexo reduz o número de nós expandidos em 78\% (média
+sections/introduction.tex:48:  \item na instância mais difícil do conjunto, o limite de Held-Karp fica 2,1\% abaixo do
+main.tex:47:  78\%, since most of the time is spent finding, not proving, the optimum; the matching
+main.tex:61:  inserção pelo fecho convexo reduz a árvore em 78\%, porque a maior parte do tempo vai
+sections/conclusions.tex:18:$N \approx 75$ se confirmou. Com o limite forte, a maior parte do tempo vai para achar a
+sections/conclusions.tex:20:fecho convexo cortou 78\% dos nós e venceu em todas as instâncias, a um custo de
+sections/conclusions.tex:35:usa a mesma aresta duas vezes quando as duas pontas do caminho têm o mesmo vizinho mais
+sections/implementation.tex:61:por nó: na instância st70 o B\&B expandiu cerca de 29 mil nós, e na rd100-n75 mais de
+sections/implementation.tex:62:75 mil antes do prazo, numa máquina com 3~GB de memória. A DFS também aproveita o
+sections/implementation.tex:70:  LB(\pi) = c(P) + \mathrm{AGM}_w(U) + \min_{u \in U}(d_{\ell u} + \pi_u)
+sections/implementation.tex:71:          + \min_{u \in U}(d_{f u} + \pi_u) - 2\sum_{u \in
+… [2953 caracteres cortados]
+```
+
+**Ferramenta: Read** — /home/code/alg-II/tsp-empirical-analysis/report/sections/experiments.tex
+
+*Resultado:*
+
+```
+128	está no Apêndice~\ref{app:extra}.
+129	
+130	\paragraph{Nós do B\&B.} O número de nós expandidos cresce de forma exponencial, com fator
+131	de 1,11 a 1,17 por vértice adicional conforme a rota inicial (ajuste de
+132	$\log(\text{nós})$ em $N$, $R^2$ de 0,79 a 0,90; Apêndice~\ref{app:extra}).
+133	
+134	\subsection{Impacto do \emph{warm-start}}\label{sec:warmstart}
+135	
+136	A Tabela~\ref{tab:warmstart} compara as cinco rotas iniciais pelo número de nós
+137	expandidos, em razão à rota trivial na mesma instância. O número de nós é a medida
+138	principal: o B\&B é determinístico, e ao contrário do tempo, os nós não dependem da carga
+139	da máquina (Seção~\ref{sec:setup}).
+140	
+141	\input{\results{warmstart_summary.tex}}
+142	
+143	\paragraph{Só a inserção pelo fecho reduz muito a árvore.} A inserção pelo fecho
+144	convexo, com gap inicial mediano de 0,9\%, expande 78\% menos nós que a rota trivial
+145	(média geométrica) e vence nas 15 instâncias ($p < 0{,}001$ no Wilcoxon pareado com
+146	correção de Holm; Friedman $\chi^2 = 42{,}9$, $p = 10^{-8}$). O Christofides reduz 23\% e
+147	vence em 11 instâncias; o vizinho mais próximo e o Twice-around, só 8\%
+148	(Figura~\ref{fig:nodes-ratio}, no 
+… [7439 caracteres cortados]
+```
+
+**Ferramenta: Bash** — Recheck that the first DFS leaf equals the NN tour
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis && .venv/bin/python -c "
+import pandas as pd, json
+w=pd.read_csv('results/tables/warmstart_per_instance.csv',keep_default_na=False,na_values=['']); t=w[w.kind!='stress']
+r=pd.read_csv('results/runs.csv',keep_default_na=False,na_values=['']); b=r[(r.group=='bnb')&(r.strategy=='trivial')].set_index('instance')
+nn=t[t.strategy=='nn'].set_index('instance').ub0
+ok=0
+for i in nn.index:
+    h=json.loads(b.loc[i,'ub_history']); first=h[0][1] if h else None
+    ok+= first==nn[i]
+print(ok, len(nn))"
+```
+
+*Resultado:*
+
+```
+14 15
+```
+
+### Assistente
+
+Continua 14 de 15. Agora reescrevo os trechos com números novos.
+
+**Ferramenta: Bash** — Update warm-start, collapse and adversarial passages with new numbers
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis/report && python3 - <<'PYEOF'
+import re
+def rep(path, pairs):
+    s=open(path).read()
+    for a,b in pairs:
+        assert a in s, (path, a[:60]); s=s.replace(a,b)
+    open(path,"w").write(s)
+
+rep("sections/experiments.tex", [
+("""de 1,11 a 1,17 por vértice adicional conforme a rota inicial (ajuste de
+$\\log(\\text{nós})$ em $N$, $R^2$ de 0,79 a 0,90; Apêndice~\\ref{app:extra}).""",
+"""de 1,11 a 1,17 por vértice adicional conforme a rota inicial (ajuste de
+$\\log(\\text{nós})$ em $N$, $R^2$ de 0,78 a 0,90; Apêndice~\\ref{app:extra})."""),
+("""convexo, com gap inicial mediano de 0,9\\%, expande 78\\% menos nós que a rota trivial
+(média geométrica) e vence nas 15 instâncias ($p < 0{,}001$ no Wilcoxon pareado com
+correção de Holm; Friedman $\\chi^2 = 42{,}9$, $p = 10^{-8}$).""",
+"""convexo, com gap inicial mediano de 0,9\\%, expande 77\\% menos nós que a rota trivial
+(média geométrica) e vence nas 15 instâncias ($p = 0{,}003$ no Wilcoxon pareado com
+correção de Holm; Friedman $\\chi^2 = 42{,}9$, $p = 10^{-8}$)."""),
+("""\\paragraph{O \\emph{trade-off} compensa.} Nenhuma heurística passou de 39~ms (o
+Christofides, no berlin52). A maior fração do tempo do B\\&B gasta na heurística foi de 12\\%:
+a inserção pelo fecho, na pr76-n16, que fecha em 0,25~s. Nessas execuções o tempo da
+heurística inclui a primeira chamada no processo, sem aquecimento.
+Nas instâncias em que o B\\&B leva segundos ou mais, a heurística é desprezível. A
+inserção pel
+… [6963 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+\end{equation}
+O limite vale para qualquer $\pi$: em toda forma de completar a rota, cada vértice de $U$
+tem grau 2, então o custo com pesos $w$ é o custo real mais $2\sum\pi_u$, e esse custo é
+pelo menos a AGM de $U$ mais as duas arestas mais baratas que ligam as pontas do caminho a
+$U$. Com $\pi = 0$, (\ref{eq:lb}) é o limite 1-tree simples. As penalidades são ajustadas
+por subgradiente: $g_u = \text{grau}_u - 2$ na estrutura que realiza o mínimo, e
+\[
+```
+
+**Ferramenta: Bash** — Show audit row, limitations and conclusions passages
+
+```
+sed -n 176,186p sections/implementation.tex; sed -n 212,222p sections/implementation.tex; sed -n 14,40p sections/conclusions.tex
+```
+
+*Resultado:*
+
+```
+O efeito aparente era variação de carga da máquina. \\
+Execuções sumindo da análise
+  & Inspeção dos dados: o pandas lia o \emph{status} \texttt{NA} como valor ausente, e as
+    5 execuções da instância de estresse desapareciam sem erro.
+  & Leitura com \texttt{keep\_default\_na=False}; teste de regressão. \\
+Aresta repetida no limite inferior
+  & Análise do caso adversarial (Seção~\ref{sec:adversarial}): o vértice mais próximo das
+    duas pontas do caminho entrava duas vezes.
+  & Correção medida: efeito desprezível nos nós (razão mediana 1,00). Dados oficiais
+    mantidos; relatado como limitação. \\
+\bottomrule
+montagem do grafo do NetworkX (3--5\%). No B\&B, o cálculo do limite inferior responde
+por 98\% do tempo no st70: 482 mil chamadas, de $\approx 1{,}3$~ms cada. Os expoentes
+empíricos dessas sub-rotinas estão na Seção~\ref{sec:experiments}.
+
+\paragraph{Limitações.} Os parâmetros do subgradiente ($\delta$, $\lambda$, número de
+iterações) foram ajustados em instâncias do próprio conjunto de teste. O limite usa a
+mesma aresta duas vezes quando as duas pontas do caminho têm o mesmo vizinho mais
+próximo (Seção~\ref{sec:adversarial}). O emparelhamento
+depende de uma implementaçã
+… [2111 caracteres cortados]
+```
+
+**Ferramenta: Bash** — Recompute the B&B lower-bound profile share for st70
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis && .venv/bin/python -c "
+import pandas as pd
+p=pd.read_csv('results/profile.csv',keep_default_na=False,na_values=['']); g=p[(p.algorithm=='bnb')&(p.instance=='st70')&(p.strategy=='hull')].groupby('subroutine')[['calls','time_s']].sum(); print(g)
+print(g.loc['lower_bound','time_s']/g.loc['bnb_search','time_s'], g.loc['lower_bound','time_s']/g.loc['lower_bound','calls']*1000)"
+```
+
+*Resultado:*
+
+```
+calls      time_s
+subroutine                         
+bnb_search            1  795.523705
+convex_hull           1    0.000395
+distance_matrix       1    0.000394
+hull_insertion        1    0.003916
+insertion             1    0.003513
+lower_bound      454517  777.292217
+root_bound            1    0.350838
+0.9770824084878414 1.7101499334624555
+```
+
+**Ferramenta: Bash** — Update implementation, conclusions, intro and abstract
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis/report && python3 - <<'PYEOF'
+def rep(path, pairs):
+    s=open(path).read()
+    for a,b in pairs:
+        assert a in s, (path, a[:60]); s=s.replace(a,b)
+    open(path,"w").write(s)
+rep("sections/implementation.tex", [
+("""pelo menos a AGM de $U$ mais as duas arestas mais baratas que ligam as pontas do caminho a
+$U$.""",
+"""pelo menos a AGM de $U$ mais as duas arestas que ligam as pontas do caminho a $U$. Com
+$|U| \\geq 2$, essas arestas chegam a vértices \\emph{distintos} de $U$, daí o
+$a \\neq b$."""),
+("""  & Análise do caso adversarial (Seção~\\ref{sec:adversarial}): o vértice mais próximo das
+    duas pontas do caminho entrava duas vezes.
+  & Correção medida: efeito desprezível nos nós (razão mediana 1,00). Dados oficiais
+    mantidos; relatado como limitação. \\\\""",
+"""  & Análise do caso adversarial (Seção~\\ref{sec:adversarial}): o vértice mais próximo das
+    duas pontas do caminho entrava duas vezes.
+  & Melhor par de vértices distintos; as 80 execuções do B\\&B foram refeitas e comparadas
+    às antigas (mesmos custos, razão de nós mediana 1,00). \\\\"""),
+("""No B\\&B, o cálculo do limite inferior responde
+por 98\\% do tempo no st70: 482 mil chamadas, de $\\approx 1{,}3$~ms cada.""",
+"""No B\\&B, o cálculo do limite inferior responde
+por 98\\% do tempo no st70: 455 mil chamadas, de $\\approx 1{,}7$~ms cada (com seis
+processos em paralelo)."""),
+("""iterações) foram ajustados em instâncias do próprio conjunto de teste. 
+… [2064 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+(Bash completed with no output)
+```
+
+**Ferramenta: Bash** — Recompile the article with updated numbers
+
+```
+latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex > /dev/null 2>&1; echo exit=$?; grep -nE "^!|ndefined|Overfull" main.log | head; pdfinfo main.pdf | grep Pages; grep -E "newlabel\{(sec:conclusions|app:extra)" main.aux | sed -E 's/\\newlabel\{([^}]*)\}\{\{([^}]*)\}\{([^}]*)\}.*/\1 p=\3/'
+```
+
+*Resultado:*
+
+```
+exit=0
+Pages:           21
+sec:conclusions p=15
+app:extra p=17
+```
+
+### Assistente
+
+O artigo compila sem avisos, com o corpo ainda em 15 páginas. Agora escrevo a conferência da especificação.
+
+**Ferramenta: Bash** — Gather evidence for each requirement and acceptance criterion
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis && .venv/bin/python -c "
+import pandas as pd
+from analysis.sensitivity import load_gaps
+f,g=load_gaps(); print(g.max().round(2).to_dict())
+r=pd.read_csv('results/runs.csv',keep_default_na=False,na_values=['']); b=r[r.group=='bnb']
+print(b[b.instance.isin(['eil51','berlin52','st70'])].groupby('instance').cost.agg(['min','max']).to_dict())
+s=b[b.status=='NA']; print(s[['instance','nodes_expanded','nodes_pruned','max_depth','cost']].to_string())
+m=pd.read_csv('results/profile_memory.csv'); print(sorted(m.subroutine.unique()))
+p=pd.read_csv('results/profile.csv'); print(sorted(p.subroutine.unique()))
+print(len(r), r.group.value_counts().to_dict())"; cat results/features.csv | head -2; grep -n "Testes\|P3" docs/constitution.md | head
+```
+
+*Resultado:*
+
+```
+{'nn': 39.03, 'hull': 7.46, 'twice_around': 42.47, 'christofides': 13.15}
+{'min': {'berlin52': 7542, 'eil51': 426, 'st70': 675}, 'max': {'berlin52': 7542, 'eil51': 426, 'st70': 675}}
+       instance  nodes_expanded  nodes_pruned  max_depth  cost
+4875  rd100-n75         68874.0     1900822.0       75.0  7230
+4876  rd100-n75         69519.0     1930865.0       75.0  7230
+4877  rd100-n75         74732.0     2203030.0       75.0  7205
+4878  rd100-n75         75775.0     2220879.0       75.0  7205
+4879  rd100-n75         72180.0     2160728.0       75.0  7205
+['bnb_search', 'bnb_total', 'christofides', 'convex_hull', 'distance_matrix', 'euler', 'hull_insertion', 'insertion', 'lower_bound', 'matching', 'matching_build', 'mst', 'nearest_neighbor', 'odd_vertices', 'preorder', 'root_bound', 'shortcut', 'trivial', 'twice_around']
+['bnb_search', 'christofides', 'convex_hull', 'distance_matrix', 'euler', 'hull_insertion', 'insertion', 'lower_bound', 'matching', 'matching_build', 'mst', 'nearest_neighbor', 'odd_vertices', 'preorder', 'root_bound', 'shortcut', 'trivial', 'twice_around']
+4880 {'approx': 4800, 'bnb': 80}
+instance,kind,source,n,aspect_ratio,hull_ratio,spatial_entropy,clark_evans,ms
+… [209 caracteres cortados]
+```
+
+**Ferramenta: Write** — /home/code/alg-II/tsp-empirical-analysis/docs/spec-check.md
+
+```
+# Conferência da especificação (T24)
+
+Cada requisito e critério de aceitação de `docs/specification.md`, com a evidência e a
+situação. Conferido em 23/11/2026, depois da rodada final do B&B (limite corrigido, D35).
+
+Legenda: **OK** atendido · **OK\*** atendido com divergência registrada · **Autora** depende de ação da autora.
+
+## Requisitos funcionais
+
+| Requisito | Evidência | Situação |
+|---|---|---|
+| **RF1** Ler TSPLIB `EUC_2D` | `tsp/tsplib.py` rejeita outros tipos; `tests/test_tsplib.py` | OK |
+| **RF1** 12 sub-instâncias com os N da D5, de origens variadas (D6) | `data/instances/manifest.csv` (2 por origem, 6 origens); `tests/test_generate.py` | OK |
+| **RF1** eil51, berlin52, st70; 15 instâncias | manifesto: 12 `sub` + 3 `full`; 80% com N ≤ 40 | OK |
+| **RF1** Manifesto com origem, semente, índices, N, ótimo | colunas `source`, `seed`, `indices`, `n`, `optimum` | OK |
+| **RF1** (extra, D30) Instância de estresse rd100-n75 | `kind = stress`, fora do conjunto de teste | OK |
+| **RF2** B&B, Twice-around, Christofides | `tsp/bnb.py`, `tsp/approx.py`; validados contra força bruta (`tests/test_bnb.py`) e pelos fatores 2 e 1,5 (`tests/test_approx.py`, `tests/test_christofides.py`) | OK |
+| **RF2** Heurísticas trivial, vizinho mais próximo, inserção pelo fecho | `tsp/heuristics.py`; `tests/test_heuristics.py`, `tests/test_hull.py` | OK |
+| **RF3** Nós expandidos e podados, profundidade, melhorias, tempo total e da heurística | colunas de `results/runs.csv` (`BnBResult`) | OK 
+… [2781 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+File created successfully at: /home/code/alg-II/tsp-empirical-analysis/docs/spec-check.md (file state is current in your context — no need to Read it back)
+```
+
+**Ferramenta: Bash** — Fix two small claims and verify approximation-factor tests exist
+
+```
+sed -i 's/usada de fato duas vezes na rodada final/usada de fato na rodada final, interrompida e retomada/' docs/spec-check.md && sed -i 's/| ~3 min (`--quick`: ~20 s) |/| ~1–3 min (`--quick`: ~20 s) |/' README.md && grep -n "retomada\|1–3 min" docs/spec-check.md README.md | head; grep -ln "fator\|factor\|2 \*\|1.5" tests/test_approx.py tests/test_christofides.py
+```
+
+*Resultado:*
+
+```
+README.md:58:| 6 | Características, tabelas e figuras | `.venv/bin/python -m analysis` (ou `--quick`, sem refazer o *bootstrap*) | ~1–3 min (`--quick`: ~20 s) |
+docs/spec-check.md:24:| **RF4** Retomada e paralelismo | `experiments/run.py` (`pending_tasks`, `repair_csv`); usada de fato na rodada final, interrompida e retomada; `tests/test_run.py` | OK |
+tests/test_christofides.py
+tests/test_approx.py
+[This command modified 2 files you've previously read: docs/spec-check.md, README.md. Call Read before editing.]
+```
+
+### Assistente
+
+Por último, atualizo a lista de origens dos números e as imagens de revisão.
+
+**Ferramenta: Bash** — Refresh the number-source list and review images
+
+```
+python3 - <<'PYEOF'
+p="docs/review/t23-numbers.md"; s=open(p).read()
+i=s.index("## 3.3 Warm-start"); j=s.index("## 3.5 Sensibilidade")
+new='''## 3.3 Warm-start (rodada final, limite corrigido)
+| Número no texto | Fonte |
+|---|---|
+| −77% (0,233), 15 vitórias, p Holm 0,003, gap inicial 0,9%; Christofides −23% (0,772), 11 vitórias; NN −8% (0,920) e Twice-around −8% (0,923) | `T/warmstart_summary.csv` |
+| Friedman χ² = 42,9, p = 1,1e-8; Spearman 0,78 | `T/warmstart_checks.json` |
+| Twice-around empata com a trivial em 10 de 15; 1.ª folha = rota do NN em 14 de 15 | `T/warmstart_per_instance.csv`; `ub_history` da trivial × `ub0` do NN (reconferido) |
+| heurística máx. 45 ms (Christofides, rd100-n75); 11% (hull, kroA100-n12, 0,02 s) | `T/warmstart_per_instance.csv`, `time_heuristic`, `heuristic_share` |
+| tempo mediano −40% (0,601); 658 s no total; st70 1 461 → 796 s | `T/warmstart_summary.csv`; `time_saved`; `time_total` |
+| st70: achar 1 270–1 330 s, provar 180–190 s; hull acha em 509 s; mediana 86% achando (trivial) | `T/warmstart_per_instance.csv`, `t_found`, `t_prove` |
+| e^β 1,17–1,18; dobra a cada ~4,3 vértices; N previsto 72–74; rodada anterior previa 78 (hull) | `T/collapse.csv`; `results/archive/` + tabela da rodada anterior |
+| rd100-n75: 7 205 (hull, Twice-around, Christofides) por volta de 1 490 s; 7 230 (trivial, NN); raiz 6 985; ≤ 3,15% | `T/warmstart_per_instance.csv`; `T/adversarial_root.csv` |
+
+## 3.4 Caso adversarial
+| Número no texto | Fonte |
+|---|---|
+| gaps d
+… [1268 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+24
+```
+
+**Ferramenta: Bash** — Fix the st70 root gap in the text and recompile
+
+```
+grep -n "st70 (0,63" report/sections/experiments.tex && sed -i 's/st70 (0,63\\%)/st70 (0,61\\%)/' report/sections/experiments.tex && sed -i 's/R² 0,79–0,90/R² 0,78–0,90/' docs/review/t23-numbers.md && grep -n "st70 (0,61" report/sections/experiments.tex && cd report && latexmk -pdf -interaction=nonstopmode main.tex >/dev/null 2>&1; echo exit=$?; grep -cE "^!|ndefined|Overfull" main.log; cd .. && rm -f docs/review/t23-page-*.png && pdftoppm -r 70 -png report/main.pdf docs/review/t23-page
+```
+
+*Resultado:*
+
+```
+210:(Tabela~\ref{tab:adversarial}, no apêndice). Três fogem disso: eil51 (0,85\%), st70 (0,63\%) e, com
+210:(Tabela~\ref{tab:adversarial}, no apêndice). Três fogem disso: eil51 (0,85\%), st70 (0,61\%) e, com
+exit=0
+0
+[This command modified 2 files you've previously read: docs/review/t23-numbers.md, report/sections/experiments.tex. Call Read before editing.]
+```
+
+### Assistente
+
+Concluí a correção do limite do B&B e o refazimento das 80 execuções, a atualização do artigo (T23) e a T24. Os 501 testes passam, e o artigo compila sem erros, sem avisos de margem e sem referências indefinidas. Uma ressalva: a T24 só fica completa com a exportação final dos prompts, que faço depois da sua última mensagem.
+
+## T23 refeita com o limite corrigido
+
+**Antes × depois da correção** (80 pares de execuções do B&B):
+
+| Medida | Resultado |
+|---|---|
+| Custo final | **idêntico** nas 75 execuções que fecharam |
+| Nós expandidos | mediana da razão **1,00**: 35 execuções com menos nós, 23 com mais |
+| Maior ganho | st70, com **6% a 10% menos nós** |
+| Maior perda | d198-n22, até 1,95× mais nós (a trajetória das penalidades muda) |
+| kroA100-n33 | gap da raiz igual (2,1%): confirma que o problema vem da relaxação, não do defeito |
+
+O que mudou no texto:
+- **O ponto de colapso agora é previsto entre N ≈ 72 e 74 para as cinco rotas iniciais**, e a rd100-n75 estourou o prazo nas cinco, coerente com a previsão. Mesmo assim, o texto avisa que essa previsão é frágil: na rodada anterior, o mesmo ajuste previa 78 para o "Fecho + inserção", porque os tempos vêm de execuções em paralelo.
+- **A rd100-n75 não chegou a 7 205 com todas as rotas iniciais:** com a trivial e com o vizinho mais próximo a busca parou em 7 230.
+- **O gap da raiz não prevê o número de nós.** O Spearman parcial agora é −0,11 (p = 0,70); antes era 0,39.
+- **Números novos:** o "Fecho + inserção" reduz 77% dos nós (antes 78%) e 40% do tempo mediano; no st70, achar a rota leva de 1 270 a 1 330 s e provar, de 180 a 190 s.
+- **A equação do limite** agora usa o par de vértices distintos (a ≠ b), com a justificativa.
+- **A tabela de auditoria e as limitações** descrevem o defeito como encontrado e corrigido.
+
+**Arquivos novos ou alterados:**
+- `src/tsp/bnb.py`: a correção;
+- `results/archive/runs_bnb_v1_repeated_edge.csv`: as 80 execuções antigas;
+- `results/tables/bound_fix.csv` e `bound_fix_summary.json`: a comparação antes × depois;
+- D35 atualizada;
+- [docs/review/t23-numbers.md](docs/review/t23-numbers.md): de onde vem cada número citado no artigo.
+
+## T24
+- **[README.md](README.md):** estrutura, ambiente, as 7 etapas de reprodução com duração, como retomar uma rodada, onde está cada requisito e a declaração de uso de IA.
+- **[prompts/](prompts/):** a transcrição desta sessão, sem e-mail nem termos pessoais. A sessão anterior ficou de fora, como você pediu.
+- **[docs/spec-check.md](docs/spec-check.md):** todos os requisitos e critérios atendidos. Três itens estão marcados com divergência registrada (30 repetições em vez de 5, corpo do artigo com 15 páginas, exportação final dos prompts), e três pendências são suas.
+
+## O que falta para entregar
+1. **Preencher seu nome e e-mail** em [report/main.tex](report/main.tex) (hoje estão como `[Nome da Autora]` e `[e-mail]`) e recompilar com `cd report && latexmk -pdf main.tex`.
+2. **Me pedir a exportação final dos prompts**, como última ação da sessão.
+3. **Criar o repositório no GitHub, fazer o commit e o push.**
+
+**Sugestão de commit:**
+```
+feat: limite do B&B corrigido e rodada refeita; artigo completo e entrega (T23, T24)
+
+- lower_bound usa vértices distintos nas pontas do caminho (D35); 80 execuções refeitas,
+  antigas em results/archive/ e comparadas em tables/bound_fix.csv
+- artigo: resultados, caso adversarial, conclusões e apêndice (D36)
+- README de reprodução, prompts exportados sem dados pessoais, conferência da especificação
+```
+
+Aprova as revisões da T23 e da T24? Se sim, eu as marco como concluídas em [docs/tasks.md](docs/tasks.md).
+
+### Autora
+
+<ide_opened_file>The user opened the file /home/code/alg-II/tsp-empirical-analysis/report/main.tex in the IDE. This may or may not be related to the current task.</ide_opened_file>
+
+### Autora
+
+Aprovo, pode marcar a T23 e a T24
+
+**Ferramenta: Bash** — Mark T23 and T24 as done
+
+```
+sed -i 's/^- \[ \] \*\*T23\*\*/- [x] **T23**/; s/^- \[ \] \*\*T24\*\*/- [x] **T24**/' docs/tasks.md && grep -n "T2[34]" docs/tasks.md | head -2 && grep -c "\[ \]" docs/tasks.md
+```
+
+*Resultado:*
+
+```
+38:- [x] **T23** Resultados e Conclusões. *Pronto quando:* artigo completo.
+39:- [x] **T24** README de reprodução, exportar prompts, checar a especificação ponto a ponto. *Pronto quando:* tudo pronto para subir no GitHub.
+0
+```
+
+### Assistente
+
+Marquei a T23 e a T24 em [docs/tasks.md](docs/tasks.md). Com isso, **as 24 tarefas estão concluídas**.
+
+Antes do prazo (24/11 às 23h59), faltam três passos seus:
+1. **Preencher seu nome e e-mail** em [report/main.tex](report/main.tex), que você já abriu, e recompilar com `cd report && latexmk -pdf main.tex`.
+2. **Me pedir a exportação final dos prompts** como última mensagem da sessão, para a transcrição incluir esta conversa até o fim. Para gerar você mesma:
+   ```
+   python3 scripts/export_prompts.py /root/.claude/projects/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3.jsonl --redact <arquivo com os termos a remover>
+   ```
+   A lista de termos que usei está fora do repositório, em `/tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/redact.txt`. Essa pasta pode ser apagada numa reinicialização; se isso acontecer, recrie o arquivo com um termo por linha.
+3. **Criar o repositório no GitHub e fazer o commit e o push.**
+
+### Autora
+
+Pode fazer a exportação final dos prompts
+
+**Ferramenta: Bash** — Run the final prompt export and verify it is clean
+
+```
+R=/tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/redact.txt && test -f $R && python3 scripts/export_prompts.py /root/.claude/projects/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3.jsonl --redact $R && echo "termos pessoais: $(grep -ciE "$(paste -sd'|' $R)" prompts/session-72d17e35.md)" && echo "e-mails: $(grep -cE '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}' prompts/session-72d17e35.md)" && echo "mensagens da autora: $(grep -c '^### Autora' prompts/session-72d17e35.md)" && tail -c 400 prompts/session-72d17e35.md
+```
