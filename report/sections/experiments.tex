@@ -64,6 +64,9 @@ e a rodada pode ser retomada.
     compara principalmente o número de nós, que não depende da carga da máquina.
   \item \textbf{Memória:} uma execução por combinação com \texttt{tracemalloc}, separada
     das execuções de tempo. As alocações são determinísticas, então uma execução basta.
+    Para o B\&B, a memória foi medida com uma única rota inicial (Christofides) e nas
+    instâncias com $N \leq 52$, porque o \texttt{tracemalloc} deixa a execução de 2 a 5
+    vezes mais lenta.
 \end{itemize}
 
 \subsection{Complexidade empírica}\label{sec:complexity}
@@ -146,7 +149,13 @@ convexo, com gap inicial mediano de 0,9\%, expande 77\% menos nós que a rota tr
 correção de Holm; Friedman $\chi^2 = 42{,}9$, $p = 10^{-8}$). O Christofides reduz 23\% e
 vence em 11 instâncias; o vizinho mais próximo e o Twice-around, só 8\%
 (Figura~\ref{fig:nodes-ratio}, no apêndice). A correlação de Spearman entre o gap inicial e a razão de
-nós é $\rho = 0{,}78$.
+nós é $\rho = 0{,}78$. Os nós podados acompanham os expandidos (Spearman de 0,99 entre as
+duas contagens, nas 75 execuções): a inserção pelo fecho poda metade dos nós da rota
+trivial (mediana 0,50; no st70, 445 mil contra 1,1 milhão), e as demais estratégias
+podam praticamente o mesmo que a trivial. A taxa de poda, de 89\% a 92\% em todas as
+estratégias, quase não muda: cada nó expandido tem cerca de dez filhos avaliados
+(mediana), e a maioria é podada logo pelo limite inferior. Uma rota inicial melhor não poda uma fração maior dos
+filhos; ela evita que subárvores inteiras sejam abertas.
 
 \paragraph{Por que as rotas fracas quase não ajudam.} A busca desce primeiro pelo filho
 mais próximo do fim do caminho. A primeira folha que ela alcança é, portanto, a rota do
@@ -304,8 +313,8 @@ diferentes, e um modelo comum anula esses efeitos. Não há um modelo único de 
 difícil'' para as aproximações.
 
 \paragraph{3. Árvores de decisão.} Uma árvore de profundidade 2 por algoritmo ajusta bem
-na amostra ($R^2$ de 0,70 a 0,86), mas só a do Christofides tem $R^2$ positivo fora da
-amostra (0,19). Ela divide primeiro por $N \leq 34{,}5$ e depois pela entropia espacial,
+na amostra ($R^2$ de 0,70 a 0,86), mas só a do Christofides tem $R^2$ fora da amostra
+apreciável (0,19; a da inserção pelo fecho tem 0,04, e as outras duas, valores negativos). Ela divide primeiro por $N \leq 34{,}5$ e depois pela entropia espacial,
 com o gap previsto subindo de 3,5\% (instâncias pequenas e agrupadas) a 12\% (grandes e
 uniformes). É a mesma conclusão da primeira camada. Para os outros algoritmos, as
 divisões não se sustentam fora da amostra.

@@ -62,12 +62,15 @@ def per_instance(bnb: pd.DataFrame, approx: pd.DataFrame, kind: dict) -> pd.Data
 
     base = df[df.strategy == BASELINE].set_index("instance")
     df["nodes_ratio"] = df.nodes_expanded / df.instance.map(base.nodes_expanded)
+    # Podados: o enunciado pede comparar também esta contagem. Pode ser 0 (raiz já podada),
+    # então o resumo usa mediana, não média geométrica
+    df["pruned_ratio"] = df.nodes_pruned / df.instance.map(base.nodes_pruned)
     df["time_ratio"] = df.time_total / df.instance.map(base.time_total)
     df["time_saved"] = df.instance.map(base.time_total) - df.time_total
     cols = ["instance", "n", "kind", "strategy", "status", "cost", "ub0", "opt", "opt_proven",
             "initial_gap_pct", "nodes_expanded", "nodes_pruned", "prune_rate", "max_depth",
             "time_total", "time_heuristic", "heuristic_share", "t_found", "t_prove",
-            "nodes_ratio", "time_ratio", "time_saved", "root_bound"]
+            "nodes_ratio", "pruned_ratio", "time_ratio", "time_saved", "root_bound"]
     return df[cols].sort_values(["n", "instance", "strategy"]).reset_index(drop=True)
 
 
@@ -139,6 +142,8 @@ def strategy_summary(df: pd.DataFrame, tests: pd.DataFrame) -> pd.DataFrame:
             "nodes_ratio_median": g.nodes_ratio.median(),
             "nodes_ratio_geomean": float(np.exp(np.log(g.nodes_ratio).mean())),
             "fewer_nodes_than_trivial": int((g.nodes_ratio < 1).sum()),
+            "pruned_ratio_median": g.pruned_ratio.median(),
+            "prune_rate_median": g.prune_rate.median() * 100,
             "time_ratio_median": g.time_ratio.median(),
             "heuristic_time_max_s": g.time_heuristic.max(),
             "heuristic_share_max_pct": g.heuristic_share.max() * 100,
@@ -204,15 +209,20 @@ def main() -> None:
         "root_bound_max_spread": spread}, indent=2))
 
     write_latex(summary, tables / "warmstart_summary.tex",
-                "Efeito da rota inicial no B\\&B (15 instâncias; razões em relação à rota trivial).",
+                "Efeito da rota inicial no B\\&B (15 instâncias). Nós expandidos e podados em razão à rota trivial na mesma instância; taxa de poda = podados / (podados + expandidos).",
                 "tab:warmstart",
                 {"strategy": "Rota inicial", "initial_gap_pct_median": r"Gap\\inicial (\%)",
                  "nodes_ratio_geomean": r"Nós (média\\geométrica)",
-                 "fewer_nodes_than_trivial": "Vitórias", "time_ratio_median": r"Tempo\\(mediana)",
+                 "fewer_nodes_than_trivial": "Vitórias",
+                 "pruned_ratio_median": r"Podados\\(mediana)",
+                 "prune_rate_median": r"Taxa de\\poda (\%)",
+                 "time_ratio_median": r"Tempo\\(mediana)",
                  "heuristic_share_max_pct": r"Heurística\\(\% máx.)",
                  "wilcoxon_p_holm": "$p$ (Holm)"},
                 {"initial_gap_pct_median": 1, "heuristic_share_max_pct": 1,
-                 "wilcoxon_p_holm": p_value})
+                 "prune_rate_median": 1,
+                 "wilcoxon_p_holm": p_value},
+                fit=True)
     write_latex(collapse, tables / "collapse.tex",
                 "Ponto de colapso: ajuste $\\log t = \\alpha + \\beta n$ nas 15 instâncias e "
                 "resultado observado na instância de estresse rd100-n75.",

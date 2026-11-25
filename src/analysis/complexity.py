@@ -268,11 +268,12 @@ def _header(h: str) -> str:
 
 
 def write_latex(df: pd.DataFrame, path: Path, caption: str, label: str, headers: dict,
-                formats: dict | None = None) -> None:
+                formats: dict | None = None, fit: bool = False) -> None:
     """Tabela LaTeX (booktabs), sem depender do jinja2.
 
     `formats`: por coluna, número de casas decimais (padrão 2) ou função valor -> texto.
     Textos passam por `_text` (rótulos das figuras, notação matemática).
+    `fit`: reduz a tabela à largura do texto (\\resizebox, do graphicx), para tabelas largas.
     """
     formats = formats or {}
 
@@ -299,6 +300,10 @@ def write_latex(df: pd.DataFrame, path: Path, caption: str, label: str, headers:
     lines += [" & ".join(cell(c, row.get(c, math.nan)) for c in cols) + r" \\"
               for _, row in df.iterrows()]
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+    if fit:
+        start = lines.index(next(x for x in lines if x.startswith(r"\begin{tabular}")))
+        lines[start] = r"\resizebox{\textwidth}{!}{" + lines[start]
+        lines[-2] = r"\end{tabular}}"
     path.write_text("\n".join(lines) + "\n")
 
 

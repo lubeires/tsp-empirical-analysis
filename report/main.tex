@@ -23,7 +23,6 @@
 \title{Algoritmos Exatos e Aproximados para o Problema do Caixeiro\\
   Viajante Euclidiano: uma Análise Empírica}
 
-% TODO(autora): preencher nome, matrícula e e-mail
 \author{Luana Palhares\inst{1}}
 
 \address{Departamento de Ciência da Computação\\
@@ -38,7 +37,8 @@
 \begin{abstract}
   This paper compares an exact Branch-and-Bound (B\&B) with a Held-Karp lower bound
   against the Twice-around-the-tree and Christofides approximation algorithms on 15
-  Euclidean TSPLIB instances with 12 to 70 vertices. All subroutines are instrumented
+  Euclidean instances derived from TSPLIB (3 complete instances and 12 sampled
+  sub-instances) with 12 to 70 vertices. All subroutines are instrumented
   for time and memory, empirical complexity curves are fitted by regression, five
   warm-start strategies for the B\&B upper bound are compared by the size of the search
   tree, and the solution quality of the approximations is related to geometric features
@@ -52,7 +52,8 @@
 \begin{resumo}
   Este trabalho compara um Branch-and-Bound (B\&B) exato, com limite inferior de
   Held-Karp, aos algoritmos aproximados Twice-around-the-tree e Christofides em 15
-  instâncias euclidianas da TSPLIB com 12 a 70 vértices. Todas as sub-rotinas são
+  instâncias euclidianas derivadas da TSPLIB (3 completas e 12 sub-instâncias
+  sorteadas), com 12 a 70 vértices. Todas as sub-rotinas são
   instrumentadas em tempo e memória, curvas de complexidade empírica são ajustadas por
   regressão, cinco estratégias de \emph{warm-start} do limite superior do B\&B são
   comparadas pelo tamanho da árvore de busca e a qualidade das aproximações é

@@ -1,7 +1,7 @@
 # Conferência da especificação (T24)
 
 Cada requisito e critério de aceitação de `docs/specification.md`, com a evidência e a
-situação. Conferido em 23/11/2026, depois da rodada final do B&B (limite corrigido, D35).
+situação. Conferido em 23/11/2026, depois da rodada final do B&B (limite corrigido, D35), e revisado em 24/11 após uma auditoria independente contra o enunciado.
 
 Legenda: **OK** atendido · **OK\*** atendido com divergência registrada · **Autora** depende de ação da autora.
 
@@ -26,12 +26,12 @@ Legenda: **OK** atendido · **OK\*** atendido com divergência registrada · **A
 | **RF5** Pico de memória por sub-rotina | `results/profile_memory.csv` (mesmas sub-rotinas, `tracemalloc`) | OK |
 | **RF6** As 9 características | `results/features.csv` (n, aspecto, fecho, entropia, Clark-Evans, grau máx. e folhas da MST, CV do vizinho, ímpares); `tests/test_features.py` | OK |
 | **RF7a** Complexidade com R² e RMSE | `results/tables/complexity_*.csv`; artigo, seção 3.2 | OK |
-| **RF7b** Warm-start: nós, podas, tempo, custo da heurística | `results/tables/warmstart_*.csv`; artigo, seção 3.3 | OK |
+| **RF7b** Warm-start: nós expandidos e podados, tempo, custo da heurística | `results/tables/warmstart_*.csv` (colunas de podados e taxa de poda); artigo, seção 3.3 e Tabela 4 | OK |
 | **RF7c** Sensibilidade: características × gap | `results/tables/sensitivity_*`; artigo, seção 3.5 | OK |
 | **RF8** CSVs, figuras, tabelas LaTeX | `results/` (11 figuras em PDF e PNG, 24 tabelas) | OK |
-| **RF9** Artigo SBC em PDF e `.tex` | `report/main.pdf` e `report/` | OK\* (corpo com 15 páginas, D36; nome e e-mail a preencher) |
-| **RF9** Repositório GitHub | — | Autora |
-| **RF9** Histórico de prompts | `prompts/session-72d17e35.md` | OK\* (refazer a exportação ao fim da sessão) |
+| **RF9** Artigo SBC em PDF e `.tex` | `report/main.pdf` e `report/` | OK\* (corpo com 15 páginas, D36) |
+| **RF9** Repositório GitHub | repositório criado e sincronizado pela autora | OK |
+| **RF9** Histórico de prompts | `prompts/session-72d17e35.md` | OK (exportação final feita; sem e-mail nem nome) |
 
 ## Critérios de aceitação
 
@@ -43,8 +43,17 @@ Legenda: **OK** atendido · **OK\*** atendido com divergência registrada · **A
 | Um único comando refaz tabelas e figuras | `python -m analysis`: 47 arquivos, idênticos byte a byte entre execuções | OK |
 | Nenhuma execução que estourou o limite perde os contadores parciais | ver RF3 | OK |
 
-## Pendências da autora antes da entrega
+## Auditoria independente (24/11)
 
-1. Preencher nome e e-mail em `report/main.tex` e recompilar (`cd report && latexmk -pdf main.tex`).
-2. Criar o repositório no GitHub e fazer o commit e o push.
-3. Pedir a exportação final dos prompts, depois da última mensagem da sessão.
+Um agente sem acesso às conclusões anteriores conferiu o trabalho contra o enunciado
+(veredito: pronto com ressalvas). Correções feitas: comparação dos **nós podados** no
+artigo e na Tabela 4 (pedida no enunciado e antes ausente); frase sobre o R² das árvores;
+contagens de testes (501) e decisões (36); "instâncias derivadas da TSPLIB" no resumo;
+memória do B&B medida só com Christofides e N ≤ 52; contexto das medições da AGM e do
+limite inferior. Mantido e justificado (D30): nenhuma das 15 instâncias estourou o prazo;
+o colapso é mostrado pela instância de estresse, fora do conjunto, para manter os 80%
+com N ≤ 40.
+
+## Pendências
+
+Nenhuma. Após estas correções: novo commit e push.

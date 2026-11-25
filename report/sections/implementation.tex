@@ -3,7 +3,7 @@
 A implementação é em Python~3.12, com NumPy para operações vetoriais e
 NetworkX~\cite{hagberg2008} só para o emparelhamento do Christofides. O código fica no
 pacote \texttt{tsp} (algoritmos), com os pacotes \texttt{experiments} (execução) e
-\texttt{analysis} (tabelas e figuras); 469 testes automatizados cobrem os três.
+\texttt{analysis} (tabelas e figuras); 501 testes automatizados cobrem os três.
 
 \subsection{Representação das instâncias}
 
@@ -123,7 +123,7 @@ O código foi escrito com o assistente Claude Code (Anthropic), num processo gui
 especificação. Primeiro foram escritos e aprovados pela autora uma constituição do
 projeto, uma especificação de requisitos, um plano técnico e uma lista de 24 tarefas.
 Cada tarefa foi apresentada antes de implementada, com as decisões em aberto; nada foi
-implementado sem aprovação. As 34 decisões tomadas estão registradas com justificativa no
+implementado sem aprovação. As 36 decisões tomadas estão registradas com justificativa no
 repositório, e o histórico completo de \emph{prompts} está anexado. A
 Tabela~\ref{tab:audit} lista os problemas do código inicial que foram encontrados por
 testes, \emph{profiling} ou inspeção dos dados, e como foram corrigidos.
@@ -192,8 +192,8 @@ Os dois primeiros itens foram os mais importantes. A versão inicial do B\&B, co
 1-tree, era correta (testada contra força bruta), mas não fechava nenhuma instância com 24
 vértices ou mais em 10 minutos. O limite de Held-Karp não foi escolhido de início por simplicidade; o
 \emph{profiling} mostrou que o problema não era a velocidade de cada nó, mas o número de
-nós. Acelerar a AGM, que ocupa cerca de 75\% do tempo de cada limite, daria no máximo um
-ganho de 2 a 3 vezes; o limite mais forte reduziu a árvore em ordens de grandeza.
+nós. Acelerar a AGM, que numa medição feita durante o desenvolvimento ocupava cerca de 75\%
+do tempo de cada limite, daria no máximo um ganho de 2 a 3 vezes; o limite mais forte reduziu a árvore em ordens de grandeza.
 
 \paragraph{Memória.} O enunciado pede as refatorações feitas para evitar estouro de
 memória. Nenhum estouro ocorreu, e seria desonesto inventar um. As escolhas que o
@@ -211,8 +211,9 @@ interpretador e pelas bibliotecas.
 de cada algoritmo. No Christofides, o emparelhamento ocupa 68\% do tempo na menor
 instância (12 vértices) e 93\% no st70; o resto se divide entre a AGM (de 23\% a 4\%) e a
 montagem do grafo do NetworkX (3--5\%). No B\&B, o cálculo do limite inferior responde
-por 98\% do tempo no st70: 455 mil chamadas, de $\approx 1{,}7$~ms cada (com seis
-processos em paralelo). Os expoentes
+por 98\% do tempo no st70 com a inserção pelo fecho como rota inicial: 455 mil
+chamadas, de $\approx 1{,}7$~ms cada (com seis processos em paralelo; com a rota
+trivial, são 1,13 milhão de chamadas). Os expoentes
 empíricos dessas sub-rotinas estão na Seção~\ref{sec:experiments}.
 
 \paragraph{Limitações.} Os parâmetros do subgradiente ($\delta$, $\lambda$, número de

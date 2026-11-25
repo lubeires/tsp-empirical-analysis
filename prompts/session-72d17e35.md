@@ -16601,3 +16601,551 @@ Pode fazer a exportação final dos prompts
 ```
 R=/tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/redact.txt && test -f $R && python3 scripts/export_prompts.py /root/.claude/projects/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3.jsonl --redact $R && echo "termos pessoais: $(grep -ciE "$(paste -sd'|' $R)" prompts/session-72d17e35.md)" && echo "e-mails: $(grep -cE '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}' prompts/session-72d17e35.md)" && echo "mensagens da autora: $(grep -c '^### Autora' prompts/session-72d17e35.md)" && tail -c 400 prompts/session-72d17e35.md
 ```
+
+*Resultado:*
+
+````
+prompts/session-72d17e35.md: 0.7 MB
+termos pessoais: 0
+e-mails: 0
+mensagens da autora: 97
+-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3.jsonl --redact $R && echo "termos pessoais: $(grep -ciE "$(paste -sd'|' $R)" prompts/session-72d17e35.md)" && echo "e-mails: $(grep -cE '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}' prompts/session-72d17e35.md)" && echo "mensagens da autora: $(grep -c '^### Autora' prompts/session-72d17e35.md)" && tail -c 400 prompts/session-72d17e35.md
+```
+````
+
+### Assistente
+
+Gerei a exportação final em [prompts/session-72d17e35.md](prompts/session-72d17e35.md), com 0,7 MB.
+
+- **Conteúdo:** 97 mensagens suas, todas as minhas respostas e o uso de ferramentas, até o comando desta exportação.
+- **Privacidade:** uma busca no arquivo encontrou **zero** e-mails e **zero** termos pessoais da lista.
+
+A transcrição termina no comando da exportação. Esta resposta e qualquer mensagem posterior ficam de fora. Se você continuar a conversa e quiser incluí-las, é só me pedir de novo.
+
+Para entregar até amanhã (24/11) às 23h59, faltam dois passos seus:
+1. **Preencher seu nome e e-mail** em [report/main.tex](report/main.tex) e recompilar com `cd report && latexmk -pdf main.tex`.
+2. **Criar o repositório no GitHub, fazer o commit e o push.** A mensagem de commit que sugeri na revisão da T23/T24 cobre tudo o que está pendente.
+
+### Autora
+
+Meu nome e email já estão no .tex
+
+**Ferramenta: Bash** — Check placeholders are filled and recompile the PDF
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis/report && echo "marcadores restantes: $(grep -c '\[Nome da Autora\]\|\[e-mail\]' main.tex)"; latexmk -pdf -interaction=nonstopmode main.tex >/dev/null 2>&1; echo exit=$?; echo "erros/avisos: $(grep -cE '^!|ndefined|Overfull' main.log)"; pdfinfo main.pdf | grep Pages; ls -la --time-style=+%d/%H:%M main.tex main.pdf
+```
+
+*Resultado:*
+
+```
+marcadores restantes: 0
+exit=0
+erros/avisos: 0
+Pages:           21
+-rw-r--r-- 1 root root 494749 23/19:01 main.pdf
+-rw-r--r-- 1 root root   3227 23/18:59 main.tex
+```
+
+**Ferramenta: Bash** — Confirm the PDF no longer shows the placeholders
+
+```
+pdftotext -l 1 main.pdf - | head -8 | grep -c "Nome da Autora\|\[e-mail\]"
+```
+
+*Resultado:*
+
+```
+0
+```
+
+### Assistente
+
+Confirmado: o `main.tex` não tem mais nenhum marcador, e o [main.pdf](report/main.pdf) já está compilado com seu nome e e-mail. A compilação terminou sem erros nem avisos, e o PDF tem 21 páginas.
+
+Do seu lado, falta só criar o repositório no GitHub, fazer o commit e o push. A pasta ainda não é um repositório git, então o primeiro passo é `git init` na raiz do projeto.
+
+O `.gitignore` já exclui a `.venv/` e os arquivos auxiliares do LaTeX, e mantém `results/`, `data/`, `report/main.pdf` e `prompts/`, que fazem parte da entrega. Mensagem de commit sugerida:
+
+```
+TP2: análise empírica de algoritmos exatos e aproximados para o TSP EUC_2D
+
+- B&B com limite de Held-Karp, Twice-around, Christofides e 3 heurísticas
+- experimentos, profiling, análises e artigo SBC (report/main.pdf)
+- documentação spec-driven em docs/ e histórico de prompts em prompts/
+```
+
+### Autora
+
+Rode uma verificação de ponta a ponta do trabalho em relação ao enunciado, utilizando um agente independente
+
+### Assistente
+
+Vou lançar um agente independente para auditar o trabalho contra o enunciado. Ele recebe só o enunciado e o repositório, sem as minhas conclusões, para não sair ancorado nelas.
+
+**Ferramenta: Agent**
+
+```
+{
+ "description": "Independent end-to-end TP2 audit",
+ "subagent_type": "general-purpose",
+ "prompt": "You are an independent auditor for a university assignment (Algoritmos 2, UFMG, \"TP2\"). The deadline is today. Your job: check, end to end, whether the deliverable satisfies the assignment statement, and report concrete problems with evidence. Be skeptical; do not assume anything is correct because a document says so — verify against code, data and the PDF.\n\n## Inputs\n- Assignment statement (Portuguese PDF): /home/code/alg-II/tp2.pdf — read it fully first (use `pdftotext /home/code/alg-II/tp2.pdf -` ). This is the source of truth.\n- Project (repository root): /home/code/alg-II/tsp-empirical-analysis/\n  - Code in `src/` (packages `tsp`, `experiments`, `analysis`), tests in `tests/`, Python env at `.venv/` (use `.venv/bin/python`).\n  - Data in `data/`, raw results in `results/` (runs.csv, profile.csv, profile_memory.csv, features.csv, tables/, figures/, archive/).\n  - Article (SBC LaTeX) in `report/` (main.tex, sections/*.tex, main.pdf).\n  - Process docs in `docs/`, prompt history in `prompts/`, README.md at root.\n- Ignore the parent folder /home/code/alg-II/ other than tp2.pdf (it holds unrelated older work).\n\n## Rules\n- READ-ONLY. Do not edit, create, move or delete any file in the project. Do not run git commands that change state.\n- Allowed commands: reading files, `pdftotext`, `.venv/bin/python -m pytest -q`, small read-only Python snippets with pandas to i
+… [2642 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: a88df22f0ef890ca3 (internal ID - do not mention to user. Use SendMessage with to: 'a88df22f0ef890ca3', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: /tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/tasks/a88df22f0ef890ca3.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+```
+
+### Assistente
+
+Lancei o agente auditor. Ele trabalha em segundo plano e só tem acesso de leitura: não altera nenhum arquivo do projeto nem roda os experimentos longos.
+
+**O que ele recebeu:**
+- só o enunciado (`tp2.pdf`) e o repositório, sem as minhas conclusões nem a conferência que eu já fiz;
+- a tarefa de montar o checklist a partir do próprio enunciado e verificar cada item no código, nos dados e no PDF;
+- três checagens obrigatórias:
+  - rodar os testes;
+  - recalcular a partir dos CSVs pelo menos 8 números citados no artigo;
+  - conferir se a pasta `prompts/` tem algum e-mail.
+
+**O que ele vai devolver:** um veredito (pronto, pronto com ressalvas ou não pronto) e os problemas por gravidade, cada um com evidência e sugestão de correção.
+
+Quando terminar, eu trago o resultado e separo o que precisa ser corrigido antes da entrega. Como o prazo é hoje às 23h59, priorizo os itens bloqueantes.
+
+### Autora
+
+Ok, aguardo o resultado da verificação
+
+### Assistente
+
+Combinado. Trago o resultado assim que o agente terminar.
+
+### Assistente
+
+O auditor independente terminou. Veredito: **pronto com ressalvas**. Nenhum problema impede a entrega, mas há uma lacuna em relação ao enunciado que recomendo corrigir hoje.
+
+Ele também viu que o repositório **já está no GitHub e sincronizado**, com a última versão em `972bbee`. Qualquer correção vai precisar de um novo commit e push.
+
+### Lacuna em relação ao enunciado
+**1. Os nós podados não aparecem no artigo.** O enunciado pede para *"coletar e comparar o número de nós expandidos e o número de nós podados"* para as cinco estratégias. Os dados existem (`nodes_pruned` e `prune_rate`), mas o artigo só compara os expandidos.
+- **Correção:** acrescentar à tabela de warm-start uma coluna com os nós podados em razão à rota trivial e a taxa de poda, mais uma frase no texto. Depois, refazer a análise com `--quick` e recompilar.
+- **Tempo:** cerca de 15 minutos.
+
+### Inconsistências pequenas no texto (todas confirmadas)
+3. O artigo diz que só a árvore do Christofides tem R² positivo fora da amostra. A da inserção pelo fecho também tem (0,04, praticamente zero). Vou corrigir a frase.
+4. O artigo diz "469 testes" e "34 decisões". Hoje são **501 testes** e **36 decisões**.
+5. O resumo fala em "15 instâncias da TSPLIB". O correto é "derivadas da TSPLIB (3 completas e 12 sub-instâncias)".
+6. Resíduos:
+   - ainda há um comentário `% TODO(autora)` no `main.tex` (não aparece no PDF);
+   - o `spec-check.md` ainda lista como pendentes coisas que você já fez.
+7. O texto não diz que a memória do B&B foi medida só com a rota inicial Christofides e com N ≤ 52.
+8. Duas frases precisam de contexto:
+   - "a AGM ocupa ~75% do tempo do limite" vem de uma medição feita durante o desenvolvimento;
+   - "455 mil chamadas" vale para a rota inicial do fecho.
+
+### Ponto para defender na arguição (não recomendo mudar)
+**2.** O enunciado diz que algumas instâncias na faixa 45–75 *"deverão estourar"* o prazo. Com o Held-Karp, nenhuma das 15 estourou; só a instância de estresse rd100-n75 estourou, e ela fica fora do conjunto para manter os 80% com N ≤ 40. O artigo já justifica isso (D30). Mudar o conjunto hoje refaria todas as análises.
+
+### O que ele confirmou como correto
+- os 501 testes passam;
+- todas as 4 880 rotas são válidas, com o custo recalculado batendo;
+- os ótimos publicados foram atingidos, e dois ótimos de sub-instâncias foram confirmados de forma independente;
+- os aproximados ficam dentro das garantias teóricas;
+- **mais de 20 números do artigo foram recalculados dos CSVs, e todos batem**;
+- o código está coerente com a descrição do artigo, e o LaTeX compila;
+- o README aponta para comandos que existem;
+- os prompts não têm dados pessoais.
+
+**Proposta:** corrigir o item 1 e os itens 3 a 8 agora, em cerca de 30 minutos, rodar os testes, recompilar e sugerir a mensagem do novo commit. O item 9 (um detalhe do contador de profundidade) não precisa de mudança.
+
+Aprova? Se quiser, também posso fazer só o item 1, que é o único ligado diretamente ao enunciado.
+
+### Autora
+
+<task-notification>
+<task-id>a88df22f0ef890ca3</task-id>
+<tool-use-id>toolu_01NwN7VbLasUxPFwZW2NSw55</tool-use-id>
+<output-file>/tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/tasks/a88df22f0ef890ca3.output</output-file>
+<status>completed</status>
+<summary>Agent "Independent end-to-end TP2 audit" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>This agent's report was delivered to you as a message from "a88df22f0ef890ca3" (its SubagentHandback call). Read it there; it is not repeated here.
+</result>
+<usage><subagent_tokens>135230</subagent_tokens><tool_uses>34</tool_uses><duration_ms>316630</duration_ms></usage>
+</task-notification>
+
+### Autora
+
+Aprovo, pode corrigir os itens 1 e 3 a 8
+
+**Ferramenta: Bash** — Check git state and zero-pruned cases
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis && git status --short | head; git log --oneline | head -3; .venv/bin/python -c "
+import pandas as pd; w=pd.read_csv('results/tables/warmstart_per_instance.csv',keep_default_na=False,na_values=['']); t=w[w.kind!='stress']
+print(t.groupby('strategy').nodes_pruned.min().to_dict()); print(t[t.nodes_pruned==0][['instance','strategy','nodes_expanded']])"
+```
+
+*Resultado:*
+
+```
+972bbee prompts: sessão exportada
+3d3d24e feat: limite do B&B corrigido e rodada refeita; artigo completo e entrega (T23, T24)
+d5b80f0 docs: rascunho do artigo SBC: introdução, implementação/auditoria e configuração experimental (T22)
+{'christofides': 60.0, 'hull': 0.0, 'nn': 55.0, 'trivial': 60.0, 'twice_around': 55.0}
+       instance strategy  nodes_expanded
+1   kroA100-n12     hull             1.0
+6     rd100-n14     hull             1.0
+11     pr76-n16     hull             1.0
+```
+
+**Ferramenta: Bash** — Add pruned-node comparison to the warm-start table
+
+```
+python3 - <<'PYEOF'
+def rep(path, pairs):
+    s=open(path).read()
+    for a,b in pairs:
+        assert a in s, (path,a[:50]); s=s.replace(a,b)
+    open(path,"w").write(s)
+rep("src/analysis/warmstart.py", [
+('''    df["nodes_ratio"] = df.nodes_expanded / df.instance.map(base.nodes_expanded)''',
+'''    df["nodes_ratio"] = df.nodes_expanded / df.instance.map(base.nodes_expanded)
+    # Podados: o enunciado pede comparar também esta contagem. Pode ser 0 (raiz já podada),
+    # então o resumo usa mediana, não média geométrica
+    df["pruned_ratio"] = df.nodes_pruned / df.instance.map(base.nodes_pruned)'''),
+('''            "nodes_ratio", "time_ratio", "time_saved", "root_bound"]''',
+'''            "nodes_ratio", "pruned_ratio", "time_ratio", "time_saved", "root_bound"]'''),
+('''            "fewer_nodes_than_trivial": int((g.nodes_ratio < 1).sum()),''',
+'''            "fewer_nodes_than_trivial": int((g.nodes_ratio < 1).sum()),
+            "pruned_ratio_median": g.pruned_ratio.median(),
+            "prune_rate_median": g.prune_rate.median() * 100,'''),
+('''                 "fewer_nodes_than_trivial": "Vitórias", "time_ratio_median": r"Tempo\\\\(mediana)",''',
+'''                 "fewer_nodes_than_trivial": "Vitórias",
+                 "pruned_ratio_median": r"Podados\\\\(mediana)",
+                 "prune_rate_median": r"Taxa de\\\\poda (\\%)",
+                 "time_ratio_median": r"Tempo\\\\(mediana)",'''),
+('''                {"initial_gap_pct_median": 1, "heuristic_share_max_pct"
+… [1001 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+\begin{table}[htb]
+\centering
+\caption{Efeito da rota inicial no B\&B (15 instâncias). Nós expandidos e podados em razão à rota trivial na mesma instância; taxa de poda = podados / (podados + expandidos).}
+\label{tab:warmstart}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Rota inicial & \begin{tabular}[b]{@{}c@{}}Gap\\inicial (\%)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Nós (média\\geométrica)\end{tabular} & Vitórias & \begin{tabular}[b]{@{}c@{}}Podados\\(mediana)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Taxa de\\poda (\%)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Tempo\\(mediana)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Heurística\\(\% máx.)\end{tabular} & $p$ (Holm) \\
+\midrule
+Trivial & 68{,}2 & 1{,}00 & 0 & 1{,}00 & 88{,}7 & 1{,}00 & 0{,}1 & -- \\
+Vizinho mais próximo & 17{,}3 & 0{,}92 & 14 & 1{,}00 & 89{,}5 & 0{,}98 & 0{,}3 & 0{,}012 \\
+Fecho + inserção & 0{,}9 & 0{,}23 & 15 & 0{,}50 & 91{,}7 & 0{,}60 & 11{,}4 & 0{,}003 \\
+Twice-around & 25{,}8 & 0{,}92 & 5 & 1{,}00 & 88{,}7 & 1{,}00 & 2{,}4 & 0{,}043 \\
+Christofides & 6{,}3 & 0{,}77 & 11 & 0{,}97 & 90{,}9 & 0{,}99 & 10{,}0 & 0{,}010 \\
+\bottomrule
+\end{tabular}
+\end{table}
+       strategy  nodes_
+… [896 caracteres cortados]
+```
+
+### Assistente
+
+A coluna de podados entrou na tabela. Agora as correções de texto (itens 1 e 3 a 8).
+
+**Ferramenta: Bash** — Locate the passages flagged by the audit
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis/report && grep -n "só a do Christofides\|469\|34 decisões\|instâncias euclidianas\|Euclidean TSPLIB\|TODO\|cerca de 75\\\\%\|455 mil\|uma execução por combinação com\|correlação de Spearman entre o gap inicial" main.tex sections/*.tex | cut -c1-200; grep -n "Pendências\|Autora\|OK\\\\\*" ../docs/spec-check.md | cut -c1-160
+```
+
+*Resultado:*
+
+```
+sections/introduction.tex:31:Os experimentos usam 15 instâncias euclidianas (\texttt{EUC\_2D}) com 12 a 70 vértices:
+main.tex:26:% TODO(autora): preencher nome, matrícula e e-mail
+main.tex:41:  Euclidean TSPLIB instances with 12 to 70 vertices. All subroutines are instrumented
+main.tex:55:  instâncias euclidianas da TSPLIB com 12 a 70 vértices. Todas as sub-rotinas são
+sections/experiments.tex:65:  \item \textbf{Memória:} uma execução por combinação com \texttt{tracemalloc}, separada
+sections/experiments.tex:148:(Figura~\ref{fig:nodes-ratio}, no apêndice). A correlação de Spearman entre o gap inicial e a razão de
+sections/experiments.tex:307:na amostra ($R^2$ de 0,70 a 0,86), mas só a do Christofides tem $R^2$ positivo fora da
+sections/implementation.tex:6:\texttt{analysis} (tabelas e figuras); 469 testes automatizados cobrem os três.
+sections/implementation.tex:126:implementado sem aprovação. As 34 decisões tomadas estão registradas com justificativa no
+sections/implementation.tex:195:nós. Acelerar a AGM, que ocupa cerca de 75\% do tempo de cada limite, daria no máximo um
+sections/implementation.tex:214:por 98\% do tempo no st70: 455 mil chamadas, de $\approx 1{,}7$~ms cada (com s
+… [603 caracteres cortados]
+```
+
+**Ferramenta: Bash** — Show exact text around each flagged passage
+
+```
+sed -n 143,150p sections/experiments.tex; sed -n 63,67p sections/experiments.tex; sed -n 305,309p sections/experiments.tex; sed -n 193,197p sections/implementation.tex; sed -n 212,216p sections/implementation.tex; sed -n 38,42p main.tex; sed -n 53,56p main.tex; sed -n 30,33p sections/introduction.tex
+```
+
+*Resultado:*
+
+```
+\paragraph{Só a inserção pelo fecho reduz muito a árvore.} A inserção pelo fecho
+convexo, com gap inicial mediano de 0,9\%, expande 77\% menos nós que a rota trivial
+(média geométrica) e vence nas 15 instâncias ($p = 0{,}003$ no Wilcoxon pareado com
+correção de Holm; Friedman $\chi^2 = 42{,}9$, $p = 10^{-8}$). O Christofides reduz 23\% e
+vence em 11 instâncias; o vizinho mais próximo e o Twice-around, só 8\%
+(Figura~\ref{fig:nodes-ratio}, no apêndice). A correlação de Spearman entre o gap inicial e a razão de
+nós é $\rho = 0{,}78$.
+
+    complexidade usam só as execuções em sequência, e a análise de \emph{warm-start}
+    compara principalmente o número de nós, que não depende da carga da máquina.
+  \item \textbf{Memória:} uma execução por combinação com \texttt{tracemalloc}, separada
+    das execuções de tempo. As alocações são determinísticas, então uma execução basta.
+\end{itemize}
+
+\paragraph{3. Árvores de decisão.} Uma árvore de profundidade 2 por algoritmo ajusta bem
+na amostra ($R^2$ de 0,70 a 0,86), mas só a do Christofides tem $R^2$ positivo fora da
+amostra (0,19). Ela divide primeiro por $N \leq 34{,}5$ e depois pela entropia espacial,
+com o gap previsto subindo de 3,5\% (i
+… [1714 caracteres cortados]
+```
+
+**Ferramenta: Bash** — Apply the text fixes and verify the new claims
+
+```
+python3 - <<'PYEOF'
+def rep(path, pairs):
+    s=open(path).read()
+    for a,b in pairs:
+        assert a in s, (path,a[:50]); s=s.replace(a,b)
+    open(path,"w").write(s)
+rep("sections/experiments.tex", [
+("""(Figura~\\ref{fig:nodes-ratio}, no apêndice). A correlação de Spearman entre o gap inicial e a razão de
+nós é $\\rho = 0{,}78$.""",
+"""(Figura~\\ref{fig:nodes-ratio}, no apêndice). A correlação de Spearman entre o gap inicial e a razão de
+nós é $\\rho = 0{,}78$. Os nós podados acompanham os expandidos (Spearman de 0,99 entre as
+duas contagens, nas 75 execuções): a inserção pelo fecho poda metade dos nós da rota
+trivial (mediana 0,50; no st70, 445 mil contra 1,1 milhão), e as demais estratégias
+podam praticamente o mesmo que a trivial. A taxa de poda, de 89\\% a 92\\% em todas as
+estratégias, quase não muda: cada nó expandido gera dezenas de filhos, e a maioria é
+podada logo pelo limite inferior. Uma rota inicial melhor não poda uma fração maior dos
+filhos; ela evita que subárvores inteiras sejam abertas."""),
+("""  \\item \\textbf{Memória:} uma execução por combinação com \\texttt{tracemalloc}, separada
+    das execuções de tempo. As alocações são determinísticas, então uma execução basta.""",
+"""  \\item \\textbf{Memória:} uma execução por combinação com \\texttt{tracemalloc}, separada
+    das execuções de tempo. As alocações são determinísticas, então uma execução basta.
+    Para o B\\&B, a memória foi medida com uma única rota inicial (Christofides) e nas
+    instânci
+… [2542 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+prune rate range medians {'christofides': 0.909, 'hull': 0.917, 'nn': 0.895, 'trivial': 0.887, 'twice_around': 0.887}
+filhos por expandido mediana 9.979522184300341
+         calls       time_s
+14905  1127547  1437.351916
+```
+
+### Assistente
+
+O dado contradiz "dezenas de filhos": a mediana é de cerca de 10 filhos avaliados por nó expandido. Corrijo a frase.
+
+**Ferramenta: Bash** — Fix wording, update spec-check, regenerate, test and recompile
+
+```
+python3 - <<'PYEOF'
+p="report/sections/experiments.tex"; s=open(p).read()
+a="""estratégias, quase não muda: cada nó expandido gera dezenas de filhos, e a maioria é
+podada logo pelo limite inferior."""
+b="""estratégias, quase não muda: cada nó expandido tem cerca de dez filhos avaliados
+(mediana), e a maioria é podada logo pelo limite inferior."""
+assert a in s; open(p,"w").write(s.replace(a,b))
+p="docs/spec-check.md"; s=open(p).read()
+for a,b in [
+("| OK\\* (corpo com 15 páginas, D36; nome e e-mail a preencher) |","| OK\\* (corpo com 15 páginas, D36) |"),
+("| **RF9** Repositório GitHub | — | Autora |","| **RF9** Repositório GitHub | repositório criado e sincronizado pela autora | OK |"),
+("| OK\\* (refazer a exportação ao fim da sessão) |","| OK (exportação final feita; sem e-mail nem nome) |"),
+("| **RF7b** Warm-start: nós, podas, tempo, custo da heurística | `results/tables/warmstart_*.csv`; artigo, seção 3.3 | OK |",
+ "| **RF7b** Warm-start: nós expandidos e podados, tempo, custo da heurística | `results/tables/warmstart_*.csv` (colunas de podados e taxa de poda); artigo, seção 3.3 e Tabela 4 | OK |"),
+("Conferido em 23/11/2026, depois da rodada final do B&B (limite corrigido, D35).",
+ "Conferido em 23/11/2026, depois da rodada final do B&B (limite corrigido, D35), e revisado em 24/11 após uma auditoria independente contra o enunciado."),
+]:
+    assert a in s, a[:40]; s=s.replace(a,b)
+i=s.index("## Pendências da autora antes da entrega")
+s=s[:i]+"""## Auditoria independent
+… [1043 caracteres cortados]
+```
+
+*Resultado:*
+
+```
+6:Legenda: **OK** atendido · **OK\*** atendido com divergência registrada · **Autora** depende de ação da autora.
+OK: 47 arquivos gerados em 34s
+501 passed in 44.39s
+exit=0
+490:Overfull \hbox (91.25269pt too wide) in paragraph at lines 7--18
+Pages:           22
+```
+
+### Assistente
+
+A tabela de warm-start ficou 91 pt mais larga que a página. Vou adicionar ao `write_latex` uma opção que reduz só essa tabela à largura do texto.
+
+**Ferramenta: Bash** — Locate the write_latex lines to change
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis && grep -n "formats: dict | None = None) -> None:\|r\"\\\\begin{tabular}{\" + align\|r\"\\\\end{tabular}\", r\"\\\\end{table}\"" src/analysis/complexity.py
+```
+
+*Resultado:*
+
+```
+271:                formats: dict | None = None) -> None:
+297:             r"\begin{tabular}{" + align + "}", r"\toprule",
+301:    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+```
+
+**Ferramenta: Read** — /home/code/alg-II/tsp-empirical-analysis/src/analysis/complexity.py
+
+*Resultado:*
+
+```
+270	def write_latex(df: pd.DataFrame, path: Path, caption: str, label: str, headers: dict,
+271	                formats: dict | None = None) -> None:
+272	    """Tabela LaTeX (booktabs), sem depender do jinja2.
+273	
+274	    `formats`: por coluna, número de casas decimais (padrão 2) ou função valor -> texto.
+275	    Textos passam por `_text` (rótulos das figuras, notação matemática).
+276	    """
+277	    formats = formats or {}
+278	
+279	    def cell(col, v):
+280	        fmt = formats.get(col, 2)
+281	        if callable(fmt):
+282	            return fmt(v)
+283	        if isinstance(v, (bool, np.bool_)):
+284	            return "sim" if v else "não"
+285	        if isinstance(v, (int, np.integer)):
+286	            return str(v)
+287	        if isinstance(v, (float, np.floating)):
+288	            return _number(float(v), fmt)
+289	        return _text(v)
+290	
+291	    cols = list(headers)
+292	    numeric = [pd.api.types.is_numeric_dtype(df[c]) and not pd.api.types.is_bool_dtype(df[c])
+293	               if c in df else False for c in cols]
+294	    align = "".join("r" if num else "l" for num in numeric)
+295	    lines = [r"\begin{table}[htb]", r"\centering", rf"\caption{{{caption}}}",
+296	       
+… [469 caracteres cortados]
+```
+
+**Ferramenta: Edit** — /home/code/alg-II/tsp-empirical-analysis/src/analysis/complexity.py
+
+```
+formats: dict | None = None, fit: bool = False) -> None:
+    """Tabela LaTeX (booktabs), sem depender do jinja2.
+
+    `formats`: por coluna, número de casas decimais (padrão 2) ou função valor -> texto.
+    Textos passam por `_text` (rótulos das figuras, notação matemática).
+    `fit`: reduz a tabela à largura do texto (\\resizebox, do graphicx), para tabelas largas.
+    """
+```
+
+**Ferramenta: Edit** — /home/code/alg-II/tsp-empirical-analysis/src/analysis/complexity.py
+
+```
+lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+    if fit:
+        start = lines.index(next(x for x in lines if x.startswith(r"\begin{tabular}")))
+        lines[start] = r"\resizebox{\textwidth}{!}{" + lines[start]
+        lines[-2] = r"\end{tabular}}"
+    path.write_text("\n".join(lines) + "\n")
+```
+
+**Ferramenta: Bash** — Fit the warm-start table to text width and recompile
+
+```
+python3 - <<'PYEOF'
+p="src/analysis/warmstart.py"; s=open(p).read()
+a='''                 "prune_rate_median": 1,'''
+i=s.index(a); j=s.index("})", i)
+s=s[:j]+"},\n                fit=True)"+s[j+2:]
+open(p,"w").write(s)
+PYEOF
+sed -n '/write_latex(summary/,/fit=True)/p' src/analysis/warmstart.py | tail -4; .venv/bin/python -m analysis --quick | tail -1 && grep -n "resizebox\|end{tabular}}" results/tables/warmstart_summary.tex && cd report && latexmk -pdf -interaction=nonstopmode main.tex >/dev/null 2>&1; echo exit=$?; grep -nE "^!|ndefined|Overfull" main.log | head; pdfinfo main.pdf | grep Pages
+```
+
+*Resultado:*
+
+```
+The file /home/code/alg-II/tsp-empirical-analysis/src/analysis/complexity.py has been updated successfully.
+```
+
+*Resultado:*
+
+```
+The file /home/code/alg-II/tsp-empirical-analysis/src/analysis/complexity.py has been updated successfully.
+```
+
+*Resultado:*
+
+```
+{"initial_gap_pct_median": 1, "heuristic_share_max_pct": 1,
+                 "prune_rate_median": 1,
+                 "wilcoxon_p_holm": p_value},
+                fit=True)
+OK: 47 arquivos gerados em 57s
+7:\resizebox{\textwidth}{!}{\begin{tabular}{lrrrrrrrr}
+17:\end{tabular}}
+exit=0
+Pages:           22
+```
+
+### Assistente
+
+Compila sem avisos. Confiro visualmente a página da tabela.
+
+**Ferramenta: Bash** — Find the warm-start table page and refresh review images
+
+```
+cd /home/code/alg-II/tsp-empirical-analysis && P=$(grep -E "newlabel\{tab:warmstart\}" report/main.aux | sed -E 's/.*\}\{\{[^}]*\}\{([0-9]+)\}.*/\1/'); echo pagina=$P; grep -E "newlabel\{(sec:conclusions|app:extra)" report/main.aux | sed -E 's/\\newlabel\{([^}]*)\}\{\{([^}]*)\}\{([^}]*)\}.*/\1 p=\3/'; rm -f docs/review/t23-page-*.png && pdftoppm -r 70 -png report/main.pdf docs/review/t23-page && ls docs/review/t23-page-*$P.png
+```
+
+*Resultado:*
+
+```
+pagina=10
+sec:conclusions p=15
+app:extra p=18
+docs/review/t23-page-10.png
+```
+
+**Ferramenta: Read** — /home/code/alg-II/tsp-empirical-analysis/docs/review/t23-page-10.png
+
+*Resultado:*
+
+```
+[imagem]
+```
+
+### Assistente
+
+A tabela coube e está legível. Como a sessão continuou depois da última exportação, refaço a exportação dos prompts para incluir a auditoria e estas correções.
+
+**Ferramenta: Bash** — Re-export prompts and list changed files
+
+```
+R=/tmp/claude-0/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3/scratchpad/redact.txt && python3 scripts/export_prompts.py /root/.claude/projects/-home-code-alg-II/72d17e35-0e79-4c39-b431-db0b9d2cc8d3.jsonl --redact $R && echo "termos pessoais: $(grep -ciE "$(paste -sd'|' $R)" prompts/session-72d17e35.md) | e-mails: $(grep -cE '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}' prompts/session-72d17e35.md)"; git status --short
+```
